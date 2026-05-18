@@ -11,6 +11,7 @@ import os
 
 app = Flask(__name__)
 
+# --- INÍCIO DA CONFIGURAÇÃO DO BANCO ---
 banco_url = os.getenv('DATABASE_URL', 'postgresql://postgres:GuiLandin@localhost:5432/engenharia_clinica')
 
 if banco_url and banco_url.startswith("postgres://"):
@@ -21,6 +22,17 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'sua_chave_secreta_super_dificil_aqui'
 
 db.init_app(app)
+
+# --- CRIA AS TABELAS NA NUVEM E O ADMIN PADRÃO ---
+with app.app_context():
+    db.create_all()
+    if not Usuario.query.first():
+        senha_criptografada = generate_password_hash('123456')
+        admin = Usuario(nome='Administrador', username='admin', senha=senha_criptografada)
+        db.session.add(admin)
+        db.session.commit()
+        print("Tabelas e Administrador criados com sucesso na nuvem!")
+# -------------------------------------------------
 
 # Trava de Segurança
 def login_required(f):
@@ -366,16 +378,6 @@ def exportar_preventivas():
     return send_file(output, download_name="historico_preventivas.xlsx", as_attachment=True)
 
 
-# INICIALIZAÇÃO DO SERVIDOR (Sempre no FIM)
+# INICIALIZAÇÃO DO SERVIDOR (Sempre no FIM, e apenas com a linha de rodar o app)
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        
-        if not Usuario.query.first():
-            senha_criptografada = generate_password_hash('123456')
-            admin = Usuario(nome='Administrador', username='admin', senha=senha_criptografada)
-            db.session.add(admin)
-            db.session.commit()
-            print("Utilizador criado! Login: admin | Senha: 123456")
-            
     app.run(debug=True, use_reloader=False)
