@@ -219,8 +219,8 @@ def cadastrar_preventiva():
 @app.route('/historico_preventivas')
 @login_required
 def historico_preventivas():
-    termo_busca = request.args.get('q', '')
-    tipo_filtro = request.args.get('tipo', 'descricao')
+    termo_busca = request.args.get('q', '') 
+    tipo_filtro = request.args.get('tipo', '') 
 
     query = Preventiva.query.join(Monitor)
 
@@ -233,11 +233,11 @@ def historico_preventivas():
                 Preventiva.responsavel.ilike(f'%{termo_busca}%')
             )
         )
-
+    
     if tipo_filtro:
         query = query.filter(Monitor.descricao == tipo_filtro)
 
-        todas_preventivas = query.order_by(Preventiva.data_preventiva.desc()).all()
+    todas_preventivas = query.order_by(Preventiva.data_preventiva.desc()).all()
 
     tipos_equipamento = db.session.query(Monitor.descricao).filter(
         Monitor.descricao.isnot(None), Monitor.descricao != '').distinct().all()
