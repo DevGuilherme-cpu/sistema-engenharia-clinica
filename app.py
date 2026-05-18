@@ -6,11 +6,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps 
 import pandas as pd
 from io import BytesIO
-from flask import send_file
+from flask import send_file 
+import os
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:GuiLandin@localhost:5432/engenharia_clinica'
+if banco_url.startswith("postgres://"):
+    banco_url = banco_url.replace("postgres://", "postgresql://", 1)
+    
+app.config['SQLALCHEMY_DATABASE_URI'] = banco_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'sua_chave_secreta_super_dificil_aqui'
 
