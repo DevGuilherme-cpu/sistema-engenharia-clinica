@@ -219,11 +219,14 @@ def cadastrar_preventiva():
 @app.route('/historico_preventivas')
 @login_required
 def historico_preventivas():
-    termo_busca = request.args.get('q', '') 
-    tipo_filtro = request.args.get('tipo', '') 
+    termo_busca = request.args.get('q', '')
+    tipo_filtro = request.args.get('tipo', '')
+    mes_filtro = request.args.get('mes', '')
+    marca_filtro = request.args.get('marca', '')
 
     query = Preventiva.query.join(Monitor)
 
+    # 1. Filtro da Lupa
     if termo_busca:
         query = query.filter(
             or_(
@@ -234,20 +237,38 @@ def historico_preventivas():
             )
         )
     
+    # 2. Filtro de Tipo de Equipamento
     if tipo_filtro:
         query = query.filter(Monitor.descricao == tipo_filtro)
 
+    # 3. Filtro de Mês
+    if mes_filtro:
+        query = query.filter(Preventiva.mes == mes_filtro)
+
+    # 4. Filtro de Marca
+    if marca_filtro:
+        query = query.filter(Monitor.marca == marca_filtro)
+
     todas_preventivas = query.order_by(Preventiva.data_preventiva.desc()).all()
 
-    tipos_equipamento = db.session.query(Monitor.descricao).filter(
-        Monitor.descricao.isnot(None), Monitor.descricao != '').distinct().all()
+    tipos_equipamento = db.session.query(Monitor.descricao).filter(Monitor.descricao.isnot(None), Monitor.descricao != '').distinct().all()
     tipos_unicos = sorted([t[0] for t in tipos_equipamento])
+
+    marcas_equipamento = db.session.query(Monitor.marca).filter(Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
+    marcas_unicas = sorted([m[0] for m in marcas_equipamento])
+
+    meses_preventiva = db.session.query(Preventiva.mes).filter(Preventiva.mes.isnot(None), Preventiva.mes != '').distinct().all()
+    meses_unicos = sorted([m[0] for m in meses_preventiva])
 
     return render_template('historico_preventivas.html', 
                            preventivas=todas_preventivas,
                            termo_busca=termo_busca,
                            tipos_equipamento=tipos_unicos,
-                           tipo_atual=tipo_filtro)
+                           tipo_atual=tipo_filtro,
+                           marcas_equipamento=marcas_unicas,
+                           marca_atual=marca_filtro,
+                           meses_preventiva=meses_unicos,
+                           mes_atual=mes_filtro)
 
 
 @app.route('/nova_corretiva', methods=['GET', 'POST'])

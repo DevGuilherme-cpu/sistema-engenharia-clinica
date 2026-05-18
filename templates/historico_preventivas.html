@@ -10,18 +10,36 @@
     <div class="form-container" style="margin-top: 0; margin-bottom: 20px; padding: 15px; background-color: #f8f9fa;">
         <form method="GET" action="/historico_preventivas" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
             
-            <div style="flex: 2; min-width: 250px;">
+            <div style="flex: 2; min-width: 200px;">
                 <div style="position: relative;">
                     <i class="fas fa-search" style="position: absolute; left: 15px; top: 12px; color: #6c757d;"></i>
-                    <input type="text" name="q" value="{{ termo_busca }}" placeholder="Buscar patrimônio, S/N, responsável ou equipamento..." style="width: 100%; padding: 10px 10px 10px 40px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem;">
+                    <input type="text" name="q" value="{{ termo_busca }}" placeholder="Buscar patrimônio, S/N..." style="width: 100%; padding: 10px 10px 10px 40px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem;">
                 </div>
             </div>
 
-            <div style="flex: 1; min-width: 200px;">
+            <div style="flex: 1; min-width: 140px;">
+                <select name="mes" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem; color: #495057;">
+                    <option value="">Todos os Meses</option>
+                    {% for mes in meses_preventiva %}
+                        <option value="{{ mes }}" {% if mes == mes_atual %}selected{% endif %}>{{ mes }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 180px;">
                 <select name="tipo" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem; color: #495057;">
-                    <option value="">Todos os Equipamentos</option>
+                    <option value="">Todos os Tipos</option>
                     {% for tipo in tipos_equipamento %}
                         <option value="{{ tipo }}" {% if tipo == tipo_atual %}selected{% endif %}>{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 160px;">
+                <select name="marca" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem; color: #495057;">
+                    <option value="">Todas as Marcas</option>
+                    {% for marca in marcas_equipamento %}
+                        <option value="{{ marca }}" {% if marca == marca_atual %}selected{% endif %}>{{ marca }}</option>
                     {% endfor %}
                 </select>
             </div>
