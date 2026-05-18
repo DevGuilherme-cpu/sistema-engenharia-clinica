@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="conteudo-tabela">
+        
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Histórico de Preventivas</h1>
+        <a href="/cadastrar_preventiva" class="btn-salvar" style="text-decoration: none;">+ Registrar Preventiva</a>
+    </div>
+
+    <div class="tabela-container">
+        <table class="tabela-profissional">
+            <thead>
+                <tr>
+                    <th>Data da Realização</th>
+                    <th>Mês de Ref.</th>
+                    <th>Equipamento (Marca)</th>
+                    <th>Patrimônio / S/N</th>
+                    <th>Responsável</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prev in preventivas %}
+                <tr>
+                    <td><strong>{{ prev.data_preventiva.strftime('%d/%m/%Y') }}</strong></td>
+                    <td>{{ prev.mes }}</td>
+                    <td>{{ prev.monitor.descricao }} ({{ prev.monitor.marca or 'N/A' }})</td>
+                    <td>{{ prev.monitor.patrimonio or 'N/A' }} / {{ prev.monitor.numero_serie }}</td>
+                    <td>{{ prev.responsavel }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 20px;">Nenhuma preventiva registrada no histórico ainda.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

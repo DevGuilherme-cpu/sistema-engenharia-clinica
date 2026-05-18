@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="conteudo-centralizado">
+    <h1 style="text-align: center;"><i class="fas fa-file-download"></i> Central de Relatórios</h1>
+    <p style="text-align: center; color: #666; margin-bottom: 40px;">Selecione o relatório que deseja exportar em
+        formato Excel (.xlsx)</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+        <div class="form-container" style="text-align: center; margin-top: 0;">
+            <i class="fas fa-boxes-stacked" style="font-size: 3rem; color: #007bff; margin-bottom: 15px;"></i>
+            <h3>Inventário Geral</h3>
+            <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">Lista completa de todos os monitores e
+                localizações.</p>
+            <a href="/exportar/monitores" class="btn-salvar" style="display: block; text-decoration: none;">
+                <i class="fas fa-file-excel"></i> Baixar Excel
+            </a>
+        </div>
+
+        <div class="form-container" style="text-align: center; margin-top: 0;">
+            <i class="fas fa-calendar-check" style="font-size: 3rem; color: #28a745; margin-bottom: 15px;"></i>
+            <h3>Histórico de Preventivas</h3>
+            <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">Relatório de todas as manutenções
+                preventivas realizadas.</p>
+            <a href="/exportar/preventivas" class="btn-salvar"
+                style="display: block; background-color: #28a745; text-decoration: none;">
+                <i class="fas fa-file-excel"></i> Baixar Excel
+            </a>
+        </div>
+
+        <div class="form-container" style="text-align: center; margin-top: 0;">
+            <i class="fas fa-tools" style="font-size: 3rem; color: #ffc107; margin-bottom: 15px;"></i>
+            <h3>Histórico de Corretivas</h3>
+            <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">Dados de equipamentos que saíram para
+                manutenção externa.</p>
+            <a href="#" class="btn-salvar"
+                style="display: block; background-color: #ffc107; color: #333; text-decoration: none;">
+                <i class="fas fa-file-excel"></i> Baixar Excel
+            </a>
+        </div>
+
+        <div class="form-container" style="text-align: center; margin-top: 0;">
+            <i class="fas fa-print" style="font-size: 3rem; color: #6c757d; margin-bottom: 15px;"></i>
+            <h3>Imprimir Tela Atual</h3>
+            <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">Gera um PDF rápido da visão que você está
+                vendo agora.</p>
+            <button onclick="window.print()" class="btn-salvar" style="width: 100%; background-color: #6c757d;">
+                <i class="fas fa-print"></i> Imprimir / PDF
+            </button>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

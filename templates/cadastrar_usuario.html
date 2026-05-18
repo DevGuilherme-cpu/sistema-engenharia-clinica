@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="conteudo-centralizado">
+    <h1 style="text-align: center;"><i class="fas fa-user-plus"></i> Cadastrar Novo Usuário</h1>
+    <p style="text-align: center; color: #666;">Adicione engenheiros e técnicos para acessarem o sistema.</p>
+
+    <div class="form-container" style="margin-top: 30px; max-width: 500px; margin-left: auto; margin-right: auto;">
+
+        {% with messages = get_flashed_messages(category_filter=["erro"]) %}
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 20px; text-align: center;">
+            <i class="fas fa-exclamation-circle"></i> {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('cadastrar_usuario') }}" method="POST">
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                <div class="form-group">
+                    <label>Nome Completo</label>
+                    <input type="text" name="nome" placeholder="Ex: Eng. Guilherme" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nome de Usuário (Login)</label>
+                    <input type="text" name="username" placeholder="Ex: guilherme.eng" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Senha Provisória</label>
+                    <input type="password" name="senha" placeholder="Digite uma senha inicial" required>
+                </div>
+
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit" class="btn-salvar" style="background-color: #343a40;"><i class="fas fa-save"></i>
+                    Criar Usuário</button>
+                <a href="/" class="btn-cancelar">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

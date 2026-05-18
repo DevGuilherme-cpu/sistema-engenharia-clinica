@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="conteudo-tabela">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Inventário de Equipamentos</h1>
+        <a href="/cadastrar_monitor" class="btn-salvar" style="text-decoration: none;">+ Novo Monitor</a>
+    </div>
+
+    <div class="filtros-container">
+        <a href="/monitores" class="btn-filtro {% if not marca_atual %}ativo{% endif %}">Todas as Marcas</a>
+
+        {% for marca in marcas %}
+        <a href="/monitores?marca={{ marca }}" class="btn-filtro {% if marca_atual == marca %}ativo{% endif %}">{{ marca
+            }}</a>
+        {% endfor %}
+    </div>
+
+    <div class="tabela-container" style="margin-top: 0;">
+        <table class="tabela-profissional">
+            <thead>
+                <tr>
+                    <th>Patrimônio</th>
+                    <th>Equipamento</th>
+                    <th>Marca</th>
+                    <th>S/N</th>
+                    <th>Setor / Local</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for monitor in monitores %}
+                <tr>
+                    <td>{{ monitor.patrimonio or 'N/A' }}</td>
+                    <td>{{ monitor.descricao }}</td>
+                    <td>{{ monitor.marca or 'N/A' }}</td>
+                    <td>{{ monitor.numero_serie }}</td>
+                    <td>{{ monitor.local or 'Não informado' }}</td>
+                    <td><span class="badge badge-{{ monitor.status | lower }}">{{ monitor.status }}</span></td>
+                    <td>
+                        <a href="{{ url_for('editar_monitor', id=monitor.id) }}"
+                            style="color: #007bff; text-decoration: none; margin-right: 10px;">Editar</a>
+                        <a href="{{ url_for('excluir_monitor', id=monitor.id) }}"
+                            style="color: #dc3545; text-decoration: none;"
+                            onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 20px;">Nenhum monitor encontrado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

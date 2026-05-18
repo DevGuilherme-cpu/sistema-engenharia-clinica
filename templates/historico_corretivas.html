@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="conteudo-tabela">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Histórico de Corretivas</h1>
+        <div>
+            <a href="/nova_corretiva" class="btn-salvar"
+                style="background-color: #ffc107; color: #333; text-decoration: none; margin-right: 10px;">Saída</a>
+            <a href="/retorno_corretiva" class="btn-salvar" style="text-decoration: none;">Retorno</a>
+        </div>
+    </div>
+
+    <div class="tabela-container">
+        <table class="tabela-profissional">
+            <thead>
+                <tr>
+                    <th>Equipamento (Patrimônio)</th>
+                    <th>Motivo do Defeito</th>
+                    <th>Empresa</th>
+                    <th>Saída</th>
+                    <th>Retorno</th>
+                    <th>Técnico (Selo)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for man in manutencoes %}
+                <tr>
+                    <td><strong>{{ man.monitor.descricao }}</strong> <br> <small>{{ man.monitor.patrimonio or 'S/N: ' +
+                            man.monitor.numero_serie }}</small></td>
+                    <td>{{ man.motivo }}</td>
+                    <td>{{ man.empresa }}</td>
+                    <td>{{ man.data_saida.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        {% if man.data_retorno %}
+                        {{ man.data_retorno.strftime('%d/%m/%Y') }}
+                        {% else %}
+                        <span style="color: #666; font-style: italic;">Aguardando...</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ man.tecnico or '---' }}</td>
+                    <td>
+                        <span class="badge {% if man.status == 'Concluída' %}bg-azul{% else %}bg-amarelo{% endif %}">
+                            {{ man.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 20px;">Nenhuma manutenção externa registrada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

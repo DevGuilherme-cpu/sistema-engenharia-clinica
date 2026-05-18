@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="conteudo-centralizado">
+        
+    <h1 style="text-align: center;">Cadastrar Novo Monitor</h1>
+        <p style="text-align: center; color: #666;">Insira as informações técnicas do equipamento abaixo.</p>
+
+        <div class="form-container" style="margin-top: 30px;">
+            <form action="{{ url_for('cadastrar_monitor') }}" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Descrição/Nome</label>
+                        <input type="text" name="descricao" placeholder="Ex: Monitor Multiparamétrico" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Marca</label>
+                        <input type="text" name="marca" placeholder="Ex: Mindray">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Modelo</label>
+                        <input type="text" name="modelo" placeholder="Ex: ePM 12">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Número de Série</label>
+                        <input type="text" name="numero_serie" placeholder="S/N único" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Patrimônio</label>
+                        <input type="text" name="patrimonio" placeholder="Etiqueta do hospital">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Localização/Setor</label>
+                        <input type="text" name="local" placeholder="Ex: UTI Adulto - Leito 05">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status Inicial</label>
+                        <select name="status">
+                            <option value="Completa">Preventiva em dia (Completa)</option>
+                            <option value="Pendente">Preventiva Pendente</option>
+                            <option value="Manutenção">Em Manutenção</option>
+                            <option value="Desaparecido">Desaparecido</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Empresa Responsável</label>
+                        <input type="text" name="empresa" placeholder="Ex: Engenharia Interna">
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <button type="submit" class="btn-salvar">Salvar Equipamento</button>
+                    <a href="/" class="btn-cancelar">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

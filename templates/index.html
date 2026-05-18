@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="conteudo-centralizado" style="max-width: 1100px;">
+
+    <h1 style="text-align: center;"><i class="fas fa-chart-line"></i> Visão Geral dos Equipamentos</h1>
+    <p style="color: #666; margin-bottom: 30px; text-align: center;">Resumo em tempo real do status dos monitores.</p>
+
+    <div class="dashboard-cards">
+        <div class="card bg-azul">
+            <h3><i class="fas fa-desktop"></i> Total</h3>
+            <div class="numero">{{ total }}</div>
+        </div>
+        <div class="card bg-verde">
+            <h3><i class="fas fa-check-circle"></i> Completa</h3>
+            <div class="numero">{{ completos }}</div>
+        </div>
+        <div class="card bg-vermelho">
+            <h3><i class="fas fa-exclamation-triangle"></i> Pendente</h3>
+            <div class="numero">{{ pendentes }}</div>
+        </div>
+        <div class="card bg-amarelo">
+            <h3><i class="fas fa-tools"></i> Manutenção</h3>
+            <div class="numero">{{ manutencao }}</div>
+        </div>
+        <div class="card bg-cinza">
+            <h3><i class="fas fa-question-circle"></i> Desaparecidos</h3>
+            <div class="numero">{{ desaparecidos }}</div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap;">
+        
+        <div style="flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="text-align: center; margin-bottom: 15px; color: #444;">Distribuição de Status</h3>
+            <canvas id="graficoStatus"></canvas>
+        </div>
+
+        <div style="flex: 2; min-width: 400px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="text-align: center; margin-bottom: 15px; color: #444;">Monitores por Marca</h3>
+            <canvas id="graficoMarcas"></canvas>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completa', 'Pendente', 'Manutenção Ext.', 'Desaparecidos'],
+            datasets: [{
+                data: [{{ completos }}, {{ pendentes }}, {{ manutencao }}, {{ desaparecidos }}],
+                backgroundColor: ['#28a745', '#dc3545', '#ffc107', '#6c757d'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const ctxMarcas = document.getElementById('graficoMarcas').getContext('2d');
+    const nomesMarcas = {{ nomes_marcas | tojson | safe }};
+    const qtdMarcas = {{ qtd_marcas | tojson | safe }};
+
+    new Chart(ctxMarcas, {
+        type: 'bar',
+        data: {
+            labels: nomesMarcas,
+            datasets: [{
+                label: 'Quantidade',
+                data: qtdMarcas,
+                backgroundColor: '#007bff',
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+</script>
+{% endblock %}

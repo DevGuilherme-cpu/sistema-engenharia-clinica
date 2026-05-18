@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="conteudo-centralizado">
+        
+        <h1 style="text-align: center;">Registrar Retorno (Corretiva)</h1>
+        <p style="text-align: center; color: #666;">O equipamento voltará a constar como "Completa" no sistema.</p>
+
+        <div class="form-container" style="margin-top: 30px;">
+            <form action="{{ url_for('retorno_corretiva') }}" method="POST">
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    
+                    <div class="form-group">
+                        <label>Equipamento Retornando</label>
+                        <select name="manutencao_id" required>
+                            <option value="">-- Selecione o Equipamento --</option>
+                            {% for man in manutencoes %}
+                                <option value="{{ man.id }}">
+                                    OS: {{ man.motivo }} | {{ man.monitor.descricao }} (Patrimônio: {{ man.monitor.patrimonio or 'N/A' }}) - {{ man.empresa }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Data do Retorno</label>
+                            <input type="date" name="data_retorno" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Técnico Responsável (Selo)</label>
+                            <input type="text" name="tecnico" placeholder="Nome do técnico que consertou" required>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <button type="submit" class="btn-salvar">Confirmar Retorno</button>
+                    <a href="/" class="btn-cancelar">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

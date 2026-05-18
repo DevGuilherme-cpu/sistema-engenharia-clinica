@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="conteudo-centralizado">
+
+    <h1 style="text-align: center;">Registrar Saída (Corretiva)</h1>
+    <p style="text-align: center; color: #666;">O equipamento constará como "Em Manutenção" no Dashboard.</p>
+
+    <div class="form-container" style="margin-top: 30px;">
+        <form action="{{ url_for('nova_corretiva') }}" method="POST">
+
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                <div class="form-group">
+                    <label>Selecione o Equipamento com Defeito</label>
+                    <select name="monitor_id" required>
+                        <option value="">-- Escolha um Monitor --</option>
+                        {% for monitor in monitores %}
+                        <option value="{{ monitor.id }}">
+                            Patrimônio: {{ monitor.patrimonio or 'N/A' }} | S/N: {{ monitor.numero_serie }} - {{
+                            monitor.descricao }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Motivo / Defeito Apresentado</label>
+                    <input type="text" name="motivo" placeholder="Ex: Tela quebrada, Não liga, Troca de Bateria..."
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label>Empresa que Recolheu</label>
+                    <input type="text" name="empresa" placeholder="Ex: Lifemed Assistência, Suporte Mindray..."
+                        required>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Data de Saída</label>
+                        <input type="date" name="data_saida" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Previsão de Retorno (Opcional)</label>
+                        <input type="date" name="previsao_retorno">
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit" class="btn-salvar" style="background-color: #ffc107; color: #333;">Registrar
+                    Saída</button>
+                <a href="/" class="btn-cancelar">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
