@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from models import db, Monitor, Preventiva, ManutencaoExterna, Acessorio, Usuario
 from datetime import datetime
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps 
 import pandas as pd
@@ -219,9 +219,35 @@ def cadastrar_preventiva():
 @app.route('/historico_preventivas')
 @login_required
 def historico_preventivas():
-    todas_preventivas = Preventiva.query.order_by(
-        Preventiva.data_preventiva.desc()).all()
-    return render_template('historico_preventivas.html', preventivas=todas_preventivas)
+    termo_busca = request.args.get('q', '')
+    tipo_filtro = request.args.get('tipo', 'descricao')
+
+    query = Preventiva.query.join(Monitor)
+
+    if termo_busca:
+        query = query.filter(
+            or_(
+                Monitor.patrimonio.ilike(f'%{termo_busca}%'),
+                Monitor.numero_serie.ilike(f'%{termo_busca}%'),
+                Monitor.descricao.ilike(f'%{termo_busca}%'),
+                Preventiva.responsavel.ilike(f'%{termo_busca}%')
+            )
+        )
+
+    if tipo_filtro:
+        query = query.filter(Monitor.descricao == tipo_filtro)
+
+        todas_preventivas = query.order_by(Preventiva.data_preventiva.desc()).all()
+
+    tipos_equipamento = db.session.query(Monitor.descricao).filter(
+        Monitor.descricao.isnot(None), Monitor.descricao != '').distinct().all()
+    tipos_unicos = sorted([t[0] for t in tipos_equipamento])
+
+    return render_template('historico_preventivas.html', 
+                           preventivas=todas_preventivas,
+                           termo_busca=termo_busca,
+                           tipos_equipamento=tipos_unicos,
+                           tipo_atual=tipo_filtro)
 
 
 @app.route('/nova_corretiva', methods=['GET', 'POST'])

@@ -2,10 +2,37 @@
 
 {% block content %}
 <div class="conteudo-tabela">
-        
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h1>Histórico de Preventivas</h1>
-        <a href="/cadastrar_preventiva" class="btn-salvar" style="text-decoration: none;">+ Registrar Preventiva</a>
+        <a href="/cadastrar_preventiva" class="btn-salvar" style="background-color: #28a745; text-decoration: none;">+ Registrar Preventiva</a>
+    </div>
+
+    <div class="form-container" style="margin-top: 0; margin-bottom: 20px; padding: 15px; background-color: #f8f9fa;">
+        <form method="GET" action="/historico_preventivas" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            
+            <div style="flex: 2; min-width: 250px;">
+                <div style="position: relative;">
+                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 12px; color: #6c757d;"></i>
+                    <input type="text" name="q" value="{{ termo_busca }}" placeholder="Buscar patrimônio, S/N, responsável ou equipamento..." style="width: 100%; padding: 10px 10px 10px 40px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem;">
+                </div>
+            </div>
+
+            <div style="flex: 1; min-width: 200px;">
+                <select name="tipo" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem; color: #495057;">
+                    <option value="">Todos os Equipamentos</option>
+                    {% for tipo in tipos_equipamento %}
+                        <option value="{{ tipo }}" {% if tipo == tipo_atual %}selected{% endif %}>{{ tipo }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn-salvar" style="background-color: #007bff; margin: 0; padding: 10px 20px;">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                <a href="/historico_preventivas" class="btn-cancelar" style="margin: 0; padding: 10px 20px; text-decoration: none; display: flex; align-items: center;">Limpar</a>
+            </div>
+        </form>
     </div>
 
     <div class="tabela-container">
@@ -25,12 +52,15 @@
                     <td><strong>{{ prev.data_preventiva.strftime('%d/%m/%Y') }}</strong></td>
                     <td>{{ prev.mes }}</td>
                     <td>{{ prev.monitor.descricao }} ({{ prev.monitor.marca or 'N/A' }})</td>
-                    <td>{{ prev.monitor.patrimonio or 'N/A' }} / {{ prev.monitor.numero_serie }}</td>
+                    <td>{{ prev.monitor.patrimonio or 'N/A' }} / {{ prev.monitor.numero_serie or 'N/A' }}</td>
                     <td>{{ prev.responsavel }}</td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 20px;">Nenhuma preventiva registrada no histórico ainda.</td>
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #666;">
+                        <i class="fas fa-search" style="font-size: 2rem; color: #ddd; margin-bottom: 10px; display: block;"></i>
+                        Nenhum registro encontrado com estes filtros.
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
