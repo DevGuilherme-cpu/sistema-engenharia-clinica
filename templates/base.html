@@ -3,12 +3,79 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Engenharia Clínica</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
+<style>
+    @media screen and (max-width: 768px) {
+        body {
+            flex-direction: column !important;
+            display: flex !important;
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            width: 100% !important;
+            height: auto !important;
+            position: relative !important;
+            min-height: auto !important;
+            padding-bottom: 20px !important;
+        }
+
+        .main-content,
+        .conteudo-tabela,
+        .conteudo-centralizado {
+            width: 100% !important;
+            margin-left: 0 !important;
+            padding: 10px !important;
+            box-sizing: border-box !important;
+        }
+
+        div[style*="display: flex"],
+        div[style*="justify-content: space-between"] {
+            flex-direction: column !important;
+            gap: 10px !important;
+            align-items: stretch !important;
+        }
+
+        table,
+        .tabela-container {
+            display: block !important;
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+            width: 100%;
+        }
+
+        .form-container form,
+        .info-grid {
+            flex-direction: column !important;
+            display: flex !important;
+        }
+
+        input,
+        select {
+            width: 100% !important;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .btn-salvar,
+        .btn-cancelar {
+            width: 100% !important;
+            text-align: center;
+            margin: 5px 0 !important;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+    }
+</style>
 
 <body>
     <nav class="sidebar">
@@ -17,14 +84,21 @@
             <li><a href="/"><i class="fas fa-chart-pie" style="width: 20px;"></i> Dashboard</a></li>
 
             <li class="menu-item" onclick="toggleSubmenu('sub-equipamentos')">
-                <a href="javascript:void(0)"><i class="fas fa-briefcase-medical" style="width: 20px;"></i> Equipamentos <i class="fas fa-chevron-down" style="float: right; margin-top: 5px; font-size: 0.8rem;"></i></a>
+                <a href="javascript:void(0)"><i class="fas fa-briefcase-medical" style="width: 20px;"></i> Equipamentos
+                    <i class="fas fa-chevron-down" style="float: right; margin-top: 5px; font-size: 0.8rem;"></i></a>
                 <ul id="sub-equipamentos" class="submenu">
-                    <li><a href="/monitores"><i class="fas fa-list" style="width: 20px;"></i> Relação de Equipamentos</a></li>
-                    <li><a href="/cadastrar_monitor"><i class="fas fa-plus" style="width: 20px;"></i> Cadastrar Equipamento</a></li>
-                    <li><a href="/historico_preventivas"><i class="fas fa-check-circle" style="width: 20px;"></i> Preventivas</a></li>
-                    <li><a href="/historico_corretivas"><i class="fas fa-tools" style="width: 20px;"></i> Corretivas</a></li>
-                    <li><a href="/nova_corretiva"><i class="fas fa-arrow-up-right-from-square" style="width: 20px;"></i> Saída Ext.</a></li>
-                    <li><a href="/retorno_corretiva"><i class="fas fa-arrow-right-to-bracket" style="width: 20px;"></i> Retorno Ext.</a></li>
+                    <li><a href="/monitores"><i class="fas fa-list" style="width: 20px;"></i> Relação de
+                            Equipamentos</a></li>
+                    <li><a href="/cadastrar_monitor"><i class="fas fa-plus" style="width: 20px;"></i> Cadastrar
+                            Equipamento</a></li>
+                    <li><a href="/historico_preventivas"><i class="fas fa-check-circle" style="width: 20px;"></i>
+                            Preventivas</a></li>
+                    <li><a href="/historico_corretivas"><i class="fas fa-tools" style="width: 20px;"></i> Corretivas</a>
+                    </li>
+                    <li><a href="/nova_corretiva"><i class="fas fa-arrow-up-right-from-square" style="width: 20px;"></i>
+                            Saída Ext.</a></li>
+                    <li><a href="/retorno_corretiva"><i class="fas fa-arrow-right-to-bracket" style="width: 20px;"></i>
+                            Retorno Ext.</a></li>
                 </ul>
             </li>
 
@@ -43,9 +117,11 @@
 
             {% if session.get('usuario_cargo') in ['Administrador', 'Supervisor'] %}
             <li class="menu-item" onclick="toggleSubmenu('sub-admin')">
-                <a href="javascript:void(0)"><i class="fas fa-users-cog" style="width: 20px;"></i> Administração <i class="fas fa-chevron-down" style="float: right; margin-top: 5px; font-size: 0.8rem;"></i></a>
+                <a href="javascript:void(0)"><i class="fas fa-users-cog" style="width: 20px;"></i> Administração <i
+                        class="fas fa-chevron-down" style="float: right; margin-top: 5px; font-size: 0.8rem;"></i></a>
                 <ul id="sub-admin" class="submenu">
-                    <li><a href="/cadastrar_usuario"><i class="fas fa-user-plus" style="width: 20px;"></i> Novo Usuário</a></li>
+                    <li><a href="/cadastrar_usuario"><i class="fas fa-user-plus" style="width: 20px;"></i> Novo
+                            Usuário</a></li>
                 </ul>
             </li>
             {% endif %}
