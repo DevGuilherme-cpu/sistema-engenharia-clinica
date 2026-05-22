@@ -1,55 +1,49 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="conteudo-centralizado">
-    <h1 style="text-align: center;"><i class="fas fa-file-download"></i> Central de Relatórios</h1>
-    <p style="text-align: center; color: #666; margin-bottom: 40px;">Selecione o relatório que deseja exportar em
-        formato Excel (.xlsx)</p>
+<div class="conteudo-tabela" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <h1 style="margin-bottom: 10px;"><i class="fas fa-file-download"></i> Central de Relatórios</h1>
+    <p style="color: #666; margin-bottom: 30px;">Gere e baixe planilhas oficiais do inventário e manutenções do
+        hospital.</p>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div
+        style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 25px; border-left: 5px solid #007bff;">
+        <h3 style="margin-top: 0; color: #333;"><i class="fas fa-boxes" style="color: #007bff;"></i> Inventário de
+            Equipamentos</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Selecione uma marca específica para baixar o
+            cronograma focado ou deixe em branco para o inventário geral completo.</p>
 
-        <div class="form-container" style="text-align: center; margin-top: 0;">
-            <i class="fas fa-boxes-stacked" style="font-size: 3rem; color: #007bff; margin-bottom: 15px;"></i>
-            <h3>Inventário Geral</h3>
-            <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">Lista completa de todos os monitores e
-                localizações.</p>
-            <a href="/exportar/monitores" class="btn-salvar" style="display: block; text-decoration: none;">
-                <i class="fas fa-file-excel"></i> Baixar Excel
-            </a>
-        </div>
+        <form action="/exportar/monitores" method="GET"
+            style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 2; min-width: 250px;">
+                <select name="marca"
+                    style="width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 5px; font-size: 0.95rem; color: #495057; background-color: #fff;">
+                    <option value="">-- Baixar Inventário Geral (Todas as Marcas) --</option>
+                    {% for marca in marcas %}
+                    <option value="{{ marca }}">{{ marca }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+                <button type="submit" class="btn-salvar"
+                    style="background-color: #007bff; margin: 0; padding: 12px 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fas fa-file-excel"></i> Baixar Planilha
+                </button>
+            </div>
+        </form>
+    </div>
 
-        <div class="form-container" style="text-align: center; margin-top: 0;">
-            <i class="fas fa-calendar-check" style="font-size: 3rem; color: #28a745; margin-bottom: 15px;"></i>
-            <h3>Histórico de Preventivas</h3>
-            <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">Relatório de todas as manutenções
-                preventivas realizadas.</p>
-            <a href="/exportar/preventivas" class="btn-salvar"
-                style="display: block; background-color: #28a745; text-decoration: none;">
-                <i class="fas fa-file-excel"></i> Baixar Excel
-            </a>
-        </div>
+    <div
+        style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid #28a745;">
+        <h3 style="margin-top: 0; color: #333;"><i class="fas fa-check-circle" style="color: #28a745;"></i> Histórico de
+            Preventivas</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Baixe o histórico completo de todas as
+            preventivas realizadas separadas automaticamente por abas mensais.</p>
 
-        <div class="form-container" style="text-align: center; margin-top: 0;">
-            <i class="fas fa-tools" style="font-size: 3rem; color: #ffc107; margin-bottom: 15px;"></i>
-            <h3>Histórico de Corretivas</h3>
-            <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">Dados de equipamentos que saíram para
-                manutenção externa.</p>
-            <a href="#" class="btn-salvar"
-                style="display: block; background-color: #ffc107; color: #333; text-decoration: none;">
-                <i class="fas fa-file-excel"></i> Baixar Excel
-            </a>
-        </div>
-
-        <div class="form-container" style="text-align: center; margin-top: 0;">
-            <i class="fas fa-print" style="font-size: 3rem; color: #6c757d; margin-bottom: 15px;"></i>
-            <h3>Imprimir Tela Atual</h3>
-            <p style="font-size: 0.9rem; color: #888; margin-bottom: 20px;">Gera um PDF rápido da visão que você está
-                vendo agora.</p>
-            <button onclick="window.print()" class="btn-salvar" style="width: 100%; background-color: #6c757d;">
-                <i class="fas fa-print"></i> Imprimir / PDF
-            </button>
-        </div>
-
+        <a href="/exportar/preventivas" class="btn-salvar"
+            style="background-color: #28a745; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; margin: 0;">
+            <i class="fas fa-file-excel"></i> Baixar Histórico de Preventivas
+        </a>
     </div>
 </div>
 {% endblock %}

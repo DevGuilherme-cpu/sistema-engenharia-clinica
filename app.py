@@ -371,24 +371,43 @@ def novo_acessorio():
 @app.route('/relatorios')
 @login_required
 def pagina_relatorios():
-    return render_template('relatorios.html')
+    marcas_db = db.session.query(Monitor.marca).filter(
+        Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
+    marcas_unicas = sorted([m[0] for m in marcas_db])
+    
+    return render_template('relatorios.html', marcas=marcas_unicas)
 
 @app.route('/exportar/monitores')
 @login_required
 def exportar_monitores():
-    # 1. Busca no banco já ordenando por Marca e depois por Descrição (Ordem Alfabética)
-    monitores = Monitor.query.order_by(Monitor.marca.asc(), Monitor.descricao.asc()).all()
+    # Captura a marca que o usuário selecionou na tela de relatórios
+    marca_selecionada = request.args.get('marca', '')
+    
+    query = Monitor.query
+    
+    if marca_selecionada:
+        # Se escolheu uma marca, filtra por ela e organiza por MODELO e depois DESCRIÇÃO
+        query = query.filter(Monitor.marca == marca_selecionada).order_by(Monitor.modelo.asc(), Monitor.descricao.asc())
+        download_name = f"inventario_{marca_selecionada.lower().replace(' ', '_')}.xlsx"
+        sheet_name = marca_selecionada[:30] # Limite de letras do Excel
+    else:
+        # Se não escolheu marca, traz o Geral ordenando por Marca e Modelo
+        query = query.order_by(Monitor.marca.asc(), Monitor.modelo.asc(), Monitor.descricao.asc())
+        download_name = "inventario_geral_equipamentos.xlsx"
+        sheet_name = 'Inventário Geral'
+        
+    monitores = query.all()
     
     dados = []
     for m in monitores:
         dados.append({
             'Marca': m.marca or 'Sem Marca',
+            'Modelo': m.modelo or 'N/A',
             'Equipamento': m.descricao,
             'Patrimônio': m.patrimonio,
             'S/N': m.numero_serie,
             'Status': m.status,
             'Local / Setor': m.local,
-            'Modelo': m.modelo,
             'Empresa': m.empresa
         })
     
@@ -396,20 +415,22 @@ def exportar_monitores():
     output = BytesIO()
     
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        # Cria a aba principal com TUDO organizado
-        df.to_excel(writer, index=False, sheet_name='Inventário Geral')
-        
-        # MÁGICA: Cria uma aba separada para CADA MARCA automaticamente!
-        marcas = df['Marca'].unique()
-        for marca in marcas:
-            # Garante que o nome da aba não passa de 30 letras (regra do Excel)
-            nome_aba = str(marca)[:30].replace('/', '-') 
-            df_marca = df[df['Marca'] == marca]
-            df_marca.to_excel(writer, index=False, sheet_name=nome_aba)
+        if marca_selecionada:
+            # Baixa apenas a planilha da marca selecionada organizada por modelos
+            df.to_excel(writer, index=False, sheet_name=sheet_name)
+        else:
+            # Mantém a automação de abas para o relatório geral completo
+            df.to_excel(writer, index=False, sheet_name='Inventário Geral')
+            marcas = df['Marca'].unique()
+            for marca in marcas:
+                nome_aba = str(marca)[:30].replace('/', '-') 
+                df_marca = df[df['Marca'] == marca]
+                df_marca.to_excel(writer, index=False, sheet_name=nome_aba)
     
     output.seek(0)
+    
     return send_file(output, 
-                     download_name="inventario_equipamentos_organizado.xlsx", 
+                     download_name=download_name, 
                      as_attachment=True)
 
 @app.route('/exportar/preventivas')
