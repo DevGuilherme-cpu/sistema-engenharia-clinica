@@ -376,53 +376,74 @@ def pagina_relatorios():
 @app.route('/exportar/monitores')
 @login_required
 def exportar_monitores():
-    monitores = Monitor.query.all()
+    # 1. Busca no banco já ordenando por Marca e depois por Descrição (Ordem Alfabética)
+    monitores = Monitor.query.order_by(Monitor.marca.asc(), Monitor.descricao.asc()).all()
     
     dados = []
     for m in monitores:
         dados.append({
+            'Marca': m.marca or 'Sem Marca',
+            'Equipamento': m.descricao,
             'Patrimônio': m.patrimonio,
-            'Descrição': m.descricao,
-            'Marca': m.marca,
-            'Modelo': m.modelo,
             'S/N': m.numero_serie,
-            'Local': m.local,
             'Status': m.status,
+            'Local / Setor': m.local,
+            'Modelo': m.modelo,
             'Empresa': m.empresa
         })
     
     df = pd.DataFrame(dados)
     output = BytesIO()
+    
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Inventário')
+        # Cria a aba principal com TUDO organizado
+        df.to_excel(writer, index=False, sheet_name='Inventário Geral')
+        
+        # MÁGICA: Cria uma aba separada para CADA MARCA automaticamente!
+        marcas = df['Marca'].unique()
+        for marca in marcas:
+            # Garante que o nome da aba não passa de 30 letras (regra do Excel)
+            nome_aba = str(marca)[:30].replace('/', '-') 
+            df_marca = df[df['Marca'] == marca]
+            df_marca.to_excel(writer, index=False, sheet_name=nome_aba)
     
     output.seek(0)
-    
     return send_file(output, 
-                     download_name="inventario_monitores.xlsx", 
+                     download_name="inventario_equipamentos_organizado.xlsx", 
                      as_attachment=True)
 
 @app.route('/exportar/preventivas')
 @login_required
 def exportar_preventivas():
-    preventivas = Preventiva.query.all()
+    preventivas = Preventiva.query.order_by(Preventiva.mes.asc(), Preventiva.data_preventiva.desc()).all()
+    
     dados = []
     for p in preventivas:
         dados.append({
-            'Data': p.data_preventiva,
-            'Mês': p.mes,
+            'Mês de Ref.': p.mes,
+            'Data Realizada': p.data_preventiva.strftime('%d/%m/%Y'),
+            'Marca': p.monitor.marca or 'Sem Marca',
             'Equipamento': p.monitor.descricao,
             'Patrimônio': p.monitor.patrimonio,
+            'S/N': p.monitor.numero_serie,
             'Responsável': p.responsavel
         })
     
     df = pd.DataFrame(dados)
     output = BytesIO()
+    
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Preventivas')
+        df.to_excel(writer, index=False, sheet_name='Todas as Preventivas')
+        
+        # MÁGICA 2: Cria uma aba separada para CADA MÊS automaticamente!
+        meses = df['Mês de Ref.'].unique()
+        for mes in meses:
+            nome_aba = str(mes)[:30]
+            df_mes = df[df['Mês de Ref.'] == mes]
+            df_mes.to_excel(writer, index=False, sheet_name=nome_aba)
     
     output.seek(0)
-    return send_file(output, download_name="historico_preventivas.xlsx", as_attachment=True)
+    return send_file(output, download_name="historico_preventivas_mensal.xlsx", as_attachment=True)
 
 
 # INICIALIZAÇÃO DO SERVIDOR (Sempre no FIM, e apenas com a linha de rodar o app)
