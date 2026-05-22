@@ -122,15 +122,50 @@ def index():
     pendentes = Monitor.query.filter_by(status='Pendente').count()
     manutencao = Monitor.query.filter_by(status='Manutenção').count()
     desaparecidos = Monitor.query.filter_by(status='Desaparecido').count()
-    marcas_db = db.session.query(Monitor.marca, func.count(Monitor.id)).group_by(Monitor.marca).all() 
-    nomes_marcas = [m[0] if m[0] else 'Sem Marca' for m in marcas_db]
-    qtd_marcas = [m[1] for m in marcas_db]
     
+    marcas_db = db.session.query(func.trim(func.upper(Monitor.marca)), func.count(Monitor.id)).filter(Monitor.marca.isnot(None), Monitor.marca != '').group_by(func.trim(func.upper(Monitor.marca))).all() 
+    nomes_marcas = [m[0] for m in marcas_db]
+    qtd_marcas = [m[1] for m in marcas_db]
+
+    hoje = datetime.now().date()
+    alertas_vencidos = []
+    alertas_avencer = []
+
+    equipamentos_ativos = Monitor.query.filter(Monitor.status != 'Desaparecido').all()
+
+    for m in equipamentos_ativos:
+        ultima_prev = Preventiva.query.filter_by(monitor_id=m.id).order_by(Preventiva.data_preventiva.desc()).first()
+        
+        if ultima_prev:
+            dias_passados = (hoje - ultima_prev.data_preventiva).days
+            dias_para_vencer = 365 - dias_passados 
+
+            if dias_para_vencer < 0:
+                alertas_vencidos.append({
+                    'id': m.id,
+                    'nome': f"{m.descricao} ({m.marca})",
+                    'patrimonio': m.patrimonio or m.numero_serie or 'Sem Registro',
+                    'atraso': abs(dias_para_vencer),
+                    'data': ultima_prev.data_preventiva.strftime('%d/%m/%Y')
+                })
+            elif 0 <= dias_para_vencer <= 30:
+                alertas_avencer.append({
+                    'id': m.id,
+                    'nome': f"{m.descricao} ({m.marca})",
+                    'patrimonio': m.patrimonio or m.numero_serie or 'Sem Registro',
+                    'restantes': dias_para_vencer,
+                    'data': ultima_prev.data_preventiva.strftime('%d/%m/%Y')
+                })
+    
+    alertas_vencidos = sorted(alertas_vencidos, key=lambda x: x['atraso'], reverse=True)
+    alertas_avencer = sorted(alertas_avencer, key=lambda x: x['restantes'])
+
     return render_template(
         'index.html', 
         total=total, completos=completos, pendentes=pendentes, 
         manutencao=manutencao, desaparecidos=desaparecidos,
-        nomes_marcas=nomes_marcas, qtd_marcas=qtd_marcas
+        nomes_marcas=nomes_marcas, qtd_marcas=qtd_marcas,
+        alertas_vencidos=alertas_vencidos, alertas_avencer=alertas_avencer # <- Passamos as listas para a tela
     )
 
 @app.route('/cadastrar_monitor', methods=['GET', 'POST'])
