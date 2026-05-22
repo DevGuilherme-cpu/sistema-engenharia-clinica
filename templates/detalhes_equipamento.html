@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .mobile-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 10px;
+    }
+
+    .card-resumo {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        border-top: 5px solid #007bff;
+    }
+
+    .card-resumo h2 {
+        margin-top: 0;
+        color: #333;
+        font-size: 1.5rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    @media (max-width: 500px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .info-item {
+        background: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 6px;
+        border-left: 3px solid #ced4da;
+    }
+
+    .info-item span {
+        display: block;
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-item strong {
+        display: block;
+        font-size: 1.1rem;
+        color: #212529;
+    }
+
+    .historico-section {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .lista-historico {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .lista-historico li {
+        border-left: 4px solid #28a745;
+        background: #f4fdf6;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        border-radius: 0 6px 6px 0;
+    }
+
+    .lista-historico li.corretiva {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+
+    .btn-mobile-acao {
+        display: block;
+        width: 100%;
+        text-align: center;
+        background: #28a745;
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        margin-bottom: 20px;
+        box-sizing: border-box;
+    }
+</style>
+
+<div class="mobile-container">
+
+    <a href="/cadastrar_preventiva" class="btn-mobile-acao">
+        <i class="fas fa-tools"></i> Registrar Nova Preventiva
+    </a>
+
+    <div class="card-resumo">
+        <h2>{{ monitor.descricao }}</h2>
+        <span class="badge badge-{{ monitor.status | lower }}" style="font-size: 1rem; padding: 8px 12px;">{{
+            monitor.status }}</span>
+
+        <div class="info-grid">
+            <div class="info-item"><span>Patrimônio</span><strong>{{ monitor.patrimonio or 'Sem Registro' }}</strong>
+            </div>
+            <div class="info-item"><span>Número de Série</span><strong>{{ monitor.numero_serie or 'N/A' }}</strong>
+            </div>
+            <div class="info-item"><span>Marca / Modelo</span><strong>{{ monitor.marca }} | {{ monitor.modelo
+                    }}</strong></div>
+            <div class="info-item"><span>Local / Setor</span><strong>{{ monitor.local or 'Não Informado' }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="historico-section">
+        <h3 style="margin-top: 0; border-bottom: 2px solid #28a745; padding-bottom: 10px; color: #28a745;">
+            <i class="fas fa-check-circle"></i> Últimas Preventivas
+        </h3>
+
+        {% if preventivas %}
+        <ul class="lista-historico">
+            {% for prev in preventivas %}
+            <li>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <strong>{{ prev.data_preventiva.strftime('%d/%m/%Y') }}</strong>
+                    <span style="color: #666; font-size: 0.9rem;">Ref: {{ prev.mes }}</span>
+                </div>
+                <div style="color: #444; font-size: 0.95rem;">
+                    <i class="fas fa-user" style="color: #ccc;"></i> Resp: {{ prev.responsavel }}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: #6c757d; text-align: center; padding: 10px;">Nenhuma preventiva registrada.</p>
+        {% endif %}
+    </div>
+
+    <div class="historico-section">
+        <h3 style="margin-top: 0; border-bottom: 2px solid #dc3545; padding-bottom: 10px; color: #dc3545;">
+            <i class="fas fa-wrench"></i> Histórico de Corretivas
+        </h3>
+
+        {% if corretivas %}
+        <ul class="lista-historico">
+            {% for corr in corretivas %}
+            <li class="corretiva">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <strong>Saída: {{ corr.data_saida.strftime('%d/%m/%Y') }}</strong>
+                    <span style="color: #dc3545; font-size: 0.9rem;">{{ corr.status }}</span>
+                </div>
+                <div style="color: #444; font-size: 0.95rem; margin-bottom: 5px;">
+                    <strong>Motivo:</strong> {{ corr.motivo }}
+                </div>
+                <div style="color: #666; font-size: 0.85rem;">
+                    <i class="fas fa-building" style="color: #ccc;"></i> Emp: {{ corr.empresa }}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: #6c757d; text-align: center; padding: 10px;">Nenhuma saída para manutenção externa.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

@@ -178,9 +178,8 @@ def excluir_monitor(id):
 def gerar_etiqueta(id):
     monitor = Monitor.query.get_or_404(id)
     
-    # Cria o link completo para o telemóvel abrir quando ler o QR Code
-    link = url_for('editar_monitor', id=monitor.id, _external=True)
-    
+    # AGORA O QR CODE APONTA PARA A FICHA MOBILE DO EQUIPAMENTO
+    link = url_for('detalhes_equipamento', id=monitor.id, _external=True)
     qr = qrcode.QRCode(version=1, box_size=10, border=2)
     qr.add_data(link)
     qr.make(fit=True)
@@ -191,6 +190,18 @@ def gerar_etiqueta(id):
     qr_code_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
     
     return render_template('etiqueta.html', monitor=monitor, qr_code=qr_code_base64)
+
+@app.route('/equipamento/<int:id>')
+@login_required
+def detalhes_equipamento(id):
+    monitor = Monitor.query.get_or_404(id)
+    preventivas = Preventiva.query.filter_by(monitor_id=id).order_by(Preventiva.data_preventiva.desc()).all()
+    corretivas = ManutencaoExterna.query.filter_by(monitor_id=id).order_by(ManutencaoExterna.data_saida.desc()).all()
+    
+    return render_template('detalhes_equipamento.html', 
+                           monitor=monitor, 
+                           preventivas=preventivas, 
+                           corretivas=corretivas)
 
 @app.route('/editar_monitor/<int:id>', methods=['GET', 'POST'])
 @login_required
