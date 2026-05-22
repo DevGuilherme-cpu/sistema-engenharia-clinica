@@ -157,13 +157,23 @@ def cadastrar_monitor():
 @login_required
 def listar_monitores():
     marca_filtro = request.args.get('marca')
-    marcas_db = db.session.query(Monitor.marca).filter(Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
-    marcas_unicas = sorted([m[0] for m in marcas_db])
+    
+    marcas_db = db.session.query(func.trim(func.upper(Monitor.marca))).filter(
+        Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
+    
+    marcas_unicas = sorted(list(set([m[0] for m in marcas_db if m[0]])))
+    
     query = Monitor.query.order_by(Monitor.descricao.asc())
+
     if marca_filtro:
-        query = query.filter(Monitor.marca == marca_filtro)
+        query = query.filter(func.trim(func.upper(Monitor.marca)) == marca_filtro.strip().upper())
+
     todos_monitores = query.all()
-    return render_template('monitores.html', monitores=todos_monitores, marcas=marcas_unicas, marca_atual=marca_filtro)
+
+    return render_template('monitores.html',
+                           monitores=todos_monitores,
+                           marcas=marcas_unicas,
+                           marca_atual=marca_filtro)
 
 @app.route('/excluir_monitor/<int:id>')
 @login_required
