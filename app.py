@@ -8,6 +8,8 @@ import pandas as pd
 from io import BytesIO
 from flask import send_file 
 import os
+import qrcode
+import base64
 
 app = Flask(__name__)
 
@@ -57,9 +59,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ==========================================
 # ROTAS DE AUTENTICAÇÃO E USUÁRIOS
-# ==========================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -113,10 +113,7 @@ def cadastrar_usuario():
 
     return render_template('cadastrar_usuario.html')
 
-
-# ==========================================
 # ROTAS DO SISTEMA
-# ==========================================
 @app.route('/')
 @login_required
 def index():
@@ -175,6 +172,25 @@ def excluir_monitor(id):
     db.session.delete(monitor)
     db.session.commit()
     return redirect(url_for('listar_monitores'))
+
+@app.route('/etiqueta/<int:id>')
+@login_required
+def gerar_etiqueta(id):
+    monitor = Monitor.query.get_or_404(id)
+    
+    # Cria o link completo para o telemóvel abrir quando ler o QR Code
+    link = url_for('editar_monitor', id=monitor.id, _external=True)
+    
+    qr = qrcode.QRCode(version=1, box_size=10, border=2)
+    qr.add_data(link)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    qr_code_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+    
+    return render_template('etiqueta.html', monitor=monitor, qr_code=qr_code_base64)
 
 @app.route('/editar_monitor/<int:id>', methods=['GET', 'POST'])
 @login_required

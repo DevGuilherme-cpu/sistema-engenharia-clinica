@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etiqueta - {{ monitor.patrimonio }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f4f4f4;
+        }
+
+        .etiqueta {
+            background: white;
+            border: 2px solid #000;
+            width: 300px;
+            padding: 20px;
+            margin: 0 auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .etiqueta h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #333;
+            border-bottom: 2px solid #000;
+            padding-bottom: 5px;
+        }
+
+        .etiqueta p {
+            margin: 8px 0;
+            font-size: 0.95rem;
+            color: #000;
+        }
+
+        .qr-code {
+            margin: 10px 0;
+            width: 180px;
+            height: 180px;
+        }
+
+        /* Botão que desaparece na hora de imprimir */
+        .btn-imprimir {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .btn-imprimir:hover {
+            background-color: #0056b3;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                margin: 0;
+                padding: 0;
+            }
+
+            .btn-imprimir {
+                display: none;
+            }
+
+            .etiqueta {
+                box-shadow: none;
+                border: 1px dashed #ccc;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="etiqueta">
+        <h2>HGP - Eng. Clínica</h2>
+        <p style="font-size: 1.1rem; font-weight: bold;">{{ monitor.descricao }}</p>
+        <p>{{ monitor.marca }} | Mod: {{ monitor.modelo }}</p>
+
+        <img src="data:image/png;base64,{{ qr_code }}" class="qr-code" alt="QR Code">
+
+        <p><strong>PAT:</strong> {{ monitor.patrimonio or 'S/ PAT' }}</p>
+        <p style="font-size: 0.8rem;"><strong>S/N:</strong> {{ monitor.numero_serie or 'N/A' }}</p>
+    </div>
+
+    <button class="btn-imprimir" onclick="window.print()"><i class="fas fa-print"></i> Imprimir Etiqueta</button>
+
+</body>
+
+</html>
