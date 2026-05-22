@@ -371,27 +371,43 @@ def novo_acessorio():
 @app.route('/relatorios')
 @login_required
 def pagina_relatorios():
-    marcas_db = db.session.query(Monitor.marca).filter(Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
-    marcas_unicas = sorted([m[0] for m in marcas_db])
+    marcas_db = db.session.query(func.trim(func.upper(Monitor.marca))).filter(
+        Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
+    
+    marcas_unicas = sorted(list(set([m[0] for m in marcas_db if m[0]])))
+    
     return render_template('relatorios.html', marcas=marcas_unicas)
 
 @app.route('/exportar/monitores')
 @login_required
 def exportar_monitores():
     marca_selecionada = request.args.get('marca', '')
+    
     query = Monitor.query
     
     if marca_selecionada:
-        query = query.filter(Monitor.marca == marca_selecionada).order_by(Monitor.modelo.asc(), Monitor.descricao.asc())
+        query = query.filter(func.trim(func.upper(Monitor.marca)) == marca_selecionada.strip().upper()).order_by(Monitor.modelo.asc(), Monitor.descricao.asc())
         download_name = f"inventario_{marca_selecionada.lower().replace(' ', '_')}.xlsx"
-        sheet_name = marca_selecionada[:30]
+        sheet_name = marca_selecionada[:30] 
     else:
         query = query.order_by(Monitor.marca.asc(), Monitor.modelo.asc(), Monitor.descricao.asc())
         download_name = "inventario_geral_equipamentos.xlsx"
         sheet_name = 'Inventário Geral'
         
     monitores = query.all()
-    dados = [{'Marca': m.marca or 'Sem Marca', 'Modelo': m.modelo or 'N/A', 'Equipamento': m.descricao, 'Patrimônio': m.patrimonio, 'S/N': m.numero_serie, 'Status': m.status, 'Local / Setor': m.local, 'Empresa': m.empresa} for m in monitores]
+    
+    dados = []
+    for m in monitores:
+        dados.append({
+            'Marca': m.marca or 'Sem Marca',
+            'Modelo': m.modelo or 'N/A',
+            'Equipamento': m.descricao,
+            'Patrimônio': m.patrimonio,
+            'S/N': m.numero_serie,
+            'Status': m.status,
+            'Local / Setor': m.local,
+            'Empresa': m.empresa
+        })
     
     df = pd.DataFrame(dados)
     output = BytesIO()
@@ -408,6 +424,7 @@ def exportar_monitores():
                 df_marca.to_excel(writer, index=False, sheet_name=nome_aba)
     
     output.seek(0)
+    
     return send_file(output, download_name=download_name, as_attachment=True)
 
 @app.route('/exportar/preventivas')
