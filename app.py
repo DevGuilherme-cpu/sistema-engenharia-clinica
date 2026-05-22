@@ -137,20 +137,38 @@ def index():
 @login_required
 def cadastrar_monitor():
     if request.method == 'POST':
+        numero_serie_digitado = request.form.get('numero_serie')
+        patrimonio_digitado = request.form.get('patrimonio')
+
+        if numero_serie_digitado:
+            existente_sn = Monitor.query.filter_by(numero_serie=numero_serie_digitado).first()
+            if existente_sn:
+                flash(f'Erro: O Número de Série {numero_serie_digitado} já está cadastrado no sistema!', 'erro')
+                return redirect(url_for('cadastrar_monitor'))
+
+        if patrimonio_digitado:
+            existente_pat = Monitor.query.filter_by(patrimonio=patrimonio_digitado).first()
+            if existente_pat:
+                flash(f'Erro: O Patrimônio {patrimonio_digitado} já está cadastrado!', 'erro')
+                return redirect(url_for('cadastrar_monitor'))
+
         novo_monitor = Monitor(
             descricao=request.form.get('descricao'),
             marca=request.form.get('marca'),
             modelo=request.form.get('modelo'),
-            numero_serie=request.form.get('numero_serie'),
-            patrimonio=request.form.get('patrimonio'),
+            numero_serie=numero_serie_digitado,
+            patrimonio=patrimonio_digitado,
             local=request.form.get('local'),
             status=request.form.get('status'),
             empresa=request.form.get('empresa'),
             contrato=request.form.get('contrato')
         )
+
         db.session.add(novo_monitor)
         db.session.commit()
+        
         return redirect(url_for('index'))
+
     return render_template('cadastrar_monitor.html')
 
 @app.route('/monitores')
