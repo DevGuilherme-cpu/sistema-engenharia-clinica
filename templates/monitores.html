@@ -39,29 +39,25 @@
                     <td>{{ monitor.numero_serie }}</td>
                     <td>{{ monitor.local or 'Não informado' }}</td>
                     <td><span class="badge badge-{{ monitor.status | lower }}">{{ monitor.status }}</span></td>
-                    <td>
-                        <a href="{{ url_for('editar_monitor', id=monitor.id) }}"
-                            style="color: #007bff; text-decoration: none; margin-right: 10px;">Editar</a>
-                        <a href="{{ url_for('excluir_monitor', id=monitor.id) }}"
-                            style="color: #dc3545; text-decoration: none;"
-                            onclick="return confirm('Tem certeza que deseja excluir?')">Excluir</a>
-
+                    <td style="white-space: nowrap;">
                         <a href="/etiqueta/{{ monitor.id }}" target="_blank" class="btn-salvar"
-                            style="background-color: #17a2b8; padding: 5px 10px; font-size: 0.9rem;"
+                            style="background-color: #17a2b8; padding: 6px 12px; font-size: 0.9rem; margin-right: 5px; border-radius: 4px;"
                             title="Gerar Etiqueta QR">
                             <i class="fas fa-qrcode"></i>
                         </a>
 
                         <a href="/editar_monitor/{{ monitor.id }}" class="btn-salvar"
-                            style="background-color: #ffc107; color: #000; padding: 5px 10px; font-size: 0.9rem;">
+                            style="background-color: #ffc107; color: #000; padding: 6px 12px; font-size: 0.9rem; margin-right: 5px; border-radius: 4px;"
+                            title="Editar Equipamento">
                             <i class="fas fa-edit"></i>
                         </a>
+                        
                         <a href="/excluir_monitor/{{ monitor.id }}" class="btn-cancelar"
-                            style="padding: 5px 10px; font-size: 0.9rem;"
+                            style="padding: 6px 12px; font-size: 0.9rem; margin: 0; border-radius: 4px;"
+                            title="Excluir Equipamento"
                             onclick="return confirm('Tem certeza que deseja excluir?');">
                             <i class="fas fa-trash"></i>
                         </a>
-
                     </td>
                 </tr>
                 {% else %}
