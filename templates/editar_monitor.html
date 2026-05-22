@@ -1,35 +1,65 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="conteudo-centralizado">
-        
-    <h1 style="text-align: center;">Editar Equipamento</h1>
-        
-        <div class="form-container">
-            <form action="{{ url_for('editar_monitor', id=monitor.id) }}" method="POST">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Descrição</label>
-                        <input type="text" name="descricao" value="{{ monitor.descricao }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Número de Série</label>
-                        <input type="text" name="numero_serie" value="{{ monitor.numero_serie }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Status Atual</label>
-                        <select name="status">
-                            <option value="Completa" {% if monitor.status == 'Completa' %}selected{% endif %}>Completa</option>
-                            <option value="Pendente" {% if monitor.status == 'Pendente' %}selected{% endif %}>Pendente</option>
-                            <option value="Manutenção" {% if monitor.status == 'Manutenção' %}selected{% endif %}>Manutenção</option>
-                        </select>
-                    </div>
+<div class="conteudo-centralizado" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <h1 style="text-align: center; margin-bottom: 30px;"><i class="fas fa-edit"></i> Editar Equipamento</h1>
+
+    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <form method="POST">
+            
+            <div class="info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #555;">Descrição do Equipamento</label>
+                    <input type="text" name="descricao" value="{{ monitor.descricao }}" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
                 </div>
-                <div style="margin-top: 30px; text-align: center;">
-                    <button type="submit" class="btn-salvar">Salvar Alterações</button>
-                    <a href="/monitores" class="btn-cancelar">Cancelar</a>
+
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #555;">Número de Série (S/N)</label>
+                    <input type="text" name="numero_serie" value="{{ monitor.numero_serie }}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
                 </div>
-            </form>
-        </div>
+
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #555;">Patrimônio</label>
+                    <input type="text" name="patrimonio" value="{{ monitor.patrimonio }}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #555;">Setor / Local</label>
+                    <input type="text" name="local" value="{{ monitor.local }}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #555;">Marca</label>
+                    <input type="text" name="marca" value="{{ monitor.marca }}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: bold; color: #555;">Modelo</label>
+                    <input type="text" name="modelo" value="{{ monitor.modelo }}" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label style="font-weight: bold; color: #555;">Status Atual</label>
+                <select name="status" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+                    <option value="Completa" {% if monitor.status == 'Completa' %}selected{% endif %}>Completa (Em uso)</option>
+                    <option value="Pendente" {% if monitor.status == 'Pendente' %}selected{% endif %}>Pendente (Preventiva Atrasada)</option>
+                    <option value="Manutenção" {% if monitor.status == 'Manutenção' %}selected{% endif %}>Manutenção (Na oficina)</option>
+                    <option value="Desaparecido" {% if monitor.status == 'Desaparecido' %}selected{% endif %}>Desaparecido (Não localizado)</option>
+                </select>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                <button type="submit" class="btn-salvar" style="background-color: #28a745; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold;">
+                    <i class="fas fa-save"></i> Salvar Alterações
+                </button>
+                <a href="/monitores" class="btn-cancelar" style="background-color: #f8f9fa; color: #333; border: 1px solid #ccc; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-size: 1rem;">
+                    Cancelar
+                </a>
+            </div>
+            
+        </form>
     </div>
+</div>
 {% endblock %}
