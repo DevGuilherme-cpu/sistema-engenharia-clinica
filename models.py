@@ -4,11 +4,11 @@ db = SQLAlchemy()
 
 class Usuario(db.Model):
     __tablename__ = 'usuarios'
-    
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(50), unique=True, nullable=False)
-    senha = db.Column(db.String(255), nullable=False) # Guardará a senha criptografada
+    senha = db.Column(db.String(255), nullable=False)
+    cargo = db.Column(db.String(50), nullable=False, default='Engenheiro Clínico')
 
 class Monitor(db.Model):
     __tablename__ = 'monitores'

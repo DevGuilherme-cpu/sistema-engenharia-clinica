@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from models import db, Monitor, Preventiva, ManutencaoExterna, Acessorio, Usuario
 from datetime import datetime
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, text
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps 
 import pandas as pd
@@ -23,12 +23,26 @@ app.secret_key = 'sua_chave_secreta_super_dificil_aqui'
 
 db.init_app(app)
 
-# --- CRIA AS TABELAS NA NUVEM E O ADMIN PADRÃO ---
+# --- CRIAÇÃO E ATUALIZAÇÃO DO BANCO NA NUVEM ---
 with app.app_context():
     db.create_all()
+    
+    # Truque para adicionar a coluna 'cargo' sem apagar os dados que já existem
+    try:
+        db.session.execute(text("ALTER TABLE usuario ADD COLUMN cargo VARCHAR(50) DEFAULT 'Administrador'"))
+        db.session.commit()
+    except:
+        db.session.rollback() # Ignora se a coluna já existir
+        
+    try:
+        db.session.execute(text("ALTER TABLE usuarios ADD COLUMN cargo VARCHAR(50) DEFAULT 'Administrador'"))
+        db.session.commit()
+    except:
+        db.session.rollback()
+
     if not Usuario.query.first():
         senha_criptografada = generate_password_hash('123456')
-        admin = Usuario(nome='Administrador', username='admin', senha=senha_criptografada)
+        admin = Usuario(nome='Administrador', username='admin', senha=senha_criptografada, cargo='Administrador')
         db.session.add(admin)
         db.session.commit()
         print("Tabelas e Administrador criados com sucesso na nuvem!")
@@ -43,7 +57,9 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# ROTAS DE AUTENTICAÇÃO
+# ==========================================
+# ROTAS DE AUTENTICAÇÃO E USUÁRIOS
+# ==========================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -54,6 +70,7 @@ def login():
         if usuario and check_password_hash(usuario.senha, senha):
             session['usuario_id'] = usuario.id
             session['usuario_nome'] = usuario.nome
+            session['usuario_cargo'] = usuario.cargo # Salva o cargo na sessão
             return redirect(url_for('index'))
         else:
             flash('Usuário ou senha incorretos!', 'erro')
@@ -71,28 +88,35 @@ def logout():
 @app.route('/cadastrar_usuario', methods=['GET', 'POST'])
 @login_required
 def cadastrar_usuario():
+    # TRAVA DE HIERARQUIA: Somente Admin e Supervisor entram aqui
+    if session.get('usuario_cargo') not in ['Administrador', 'Supervisor']:
+        return redirect(url_for('index'))
+
     if request.method == 'POST':
         nome = request.form.get('nome')
         username = request.form.get('username')
         senha = request.form.get('senha')
+        cargo = request.form.get('cargo')
 
         usuario_existente = Usuario.query.filter_by(username=username).first()
         if usuario_existente:
-            flash('Este nome de usuário já está em uso. Escolha outro.', 'erro')
+            flash('Este nome de usuário já está em uso.', 'erro')
             return redirect(url_for('cadastrar_usuario'))
 
         senha_criptografada = generate_password_hash(senha)
-        
-        novo_usuario = Usuario(nome=nome, username=username, senha=senha_criptografada)
+        novo_usuario = Usuario(nome=nome, username=username, senha=senha_criptografada, cargo=cargo)
         db.session.add(novo_usuario)
         db.session.commit()
 
-        print(f"Usuário {nome} cadastrado com sucesso!")
+        print(f"Usuário {nome} cadastrado com sucesso como {cargo}!")
         return redirect(url_for('index'))
 
     return render_template('cadastrar_usuario.html')
 
+
+# ==========================================
 # ROTAS DO SISTEMA
+# ==========================================
 @app.route('/')
 @login_required
 def index():
@@ -127,34 +151,22 @@ def cadastrar_monitor():
             empresa=request.form.get('empresa'),
             contrato=request.form.get('contrato')
         )
-
         db.session.add(novo_monitor)
         db.session.commit()
-
         return redirect(url_for('index'))
-
     return render_template('cadastrar_monitor.html')
-
 
 @app.route('/monitores')
 @login_required
 def listar_monitores():
     marca_filtro = request.args.get('marca')
-    marcas_db = db.session.query(Monitor.marca).filter(
-        Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
+    marcas_db = db.session.query(Monitor.marca).filter(Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
     marcas_unicas = sorted([m[0] for m in marcas_db])
     query = Monitor.query.order_by(Monitor.descricao.asc())
-
     if marca_filtro:
         query = query.filter(Monitor.marca == marca_filtro)
-
     todos_monitores = query.all()
-
-    return render_template('monitores.html',
-                           monitores=todos_monitores,
-                           marcas=marcas_unicas,
-                           marca_atual=marca_filtro)
-
+    return render_template('monitores.html', monitores=todos_monitores, marcas=marcas_unicas, marca_atual=marca_filtro)
 
 @app.route('/excluir_monitor/<int:id>')
 @login_required
@@ -164,12 +176,10 @@ def excluir_monitor(id):
     db.session.commit()
     return redirect(url_for('listar_monitores'))
 
-
 @app.route('/editar_monitor/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_monitor(id):
     monitor = Monitor.query.get_or_404(id)
-
     if request.method == 'POST':
         monitor.descricao = request.form.get('descricao')
         monitor.marca = request.form.get('marca')
@@ -179,12 +189,9 @@ def editar_monitor(id):
         monitor.local = request.form.get('local')
         monitor.status = request.form.get('status')
         monitor.empresa = request.form.get('empresa')
-
         db.session.commit()
         return redirect(url_for('listar_monitores'))
-
     return render_template('editar_monitor.html', monitor=monitor)
-
 
 @app.route('/cadastrar_preventiva', methods=['GET', 'POST'])
 @login_required
@@ -196,37 +203,28 @@ def cadastrar_preventiva():
         responsavel = request.form.get('responsavel')
         data_obj = datetime.strptime(data_str, '%Y-%m-%d').date()
 
-        nova_preventiva = Preventiva(
-            monitor_id=monitor_id,
-            data_preventiva=data_obj,
-            mes=mes,
-            responsavel=responsavel
-        )
+        nova_preventiva = Preventiva(monitor_id=monitor_id, data_preventiva=data_obj, mes=mes, responsavel=responsavel)
         db.session.add(nova_preventiva)
 
         monitor = Monitor.query.get(monitor_id)
         if monitor:
             monitor.status = 'Completa'
-
         db.session.commit()
-
         return redirect(url_for('index'))
 
     todos_monitores = Monitor.query.all()
     return render_template('cadastrar_preventiva.html', monitores=todos_monitores)
 
-
 @app.route('/historico_preventivas')
 @login_required
 def historico_preventivas():
-    termo_busca = request.args.get('q', '')
-    tipo_filtro = request.args.get('tipo', '')
+    termo_busca = request.args.get('q', '') 
+    tipo_filtro = request.args.get('tipo', '') 
     mes_filtro = request.args.get('mes', '')
     marca_filtro = request.args.get('marca', '')
 
     query = Preventiva.query.join(Monitor)
 
-    # 1. Filtro da Lupa
     if termo_busca:
         query = query.filter(
             or_(
@@ -236,16 +234,10 @@ def historico_preventivas():
                 Preventiva.responsavel.ilike(f'%{termo_busca}%')
             )
         )
-    
-    # 2. Filtro de Tipo de Equipamento
     if tipo_filtro:
         query = query.filter(Monitor.descricao == tipo_filtro)
-
-    # 3. Filtro de Mês
     if mes_filtro:
         query = query.filter(Preventiva.mes == mes_filtro)
-
-    # 4. Filtro de Marca
     if marca_filtro:
         query = query.filter(Monitor.marca == marca_filtro)
 
@@ -253,23 +245,16 @@ def historico_preventivas():
 
     tipos_equipamento = db.session.query(Monitor.descricao).filter(Monitor.descricao.isnot(None), Monitor.descricao != '').distinct().all()
     tipos_unicos = sorted([t[0] for t in tipos_equipamento])
-
     marcas_equipamento = db.session.query(Monitor.marca).filter(Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
     marcas_unicas = sorted([m[0] for m in marcas_equipamento])
-
     meses_preventiva = db.session.query(Preventiva.mes).filter(Preventiva.mes.isnot(None), Preventiva.mes != '').distinct().all()
     meses_unicos = sorted([m[0] for m in meses_preventiva])
 
     return render_template('historico_preventivas.html', 
-                           preventivas=todas_preventivas,
-                           termo_busca=termo_busca,
-                           tipos_equipamento=tipos_unicos,
-                           tipo_atual=tipo_filtro,
-                           marcas_equipamento=marcas_unicas,
-                           marca_atual=marca_filtro,
-                           meses_preventiva=meses_unicos,
-                           mes_atual=mes_filtro)
-
+                           preventivas=todas_preventivas, termo_busca=termo_busca,
+                           tipos_equipamento=tipos_unicos, tipo_atual=tipo_filtro,
+                           marcas_equipamento=marcas_unicas, marca_atual=marca_filtro,
+                           meses_preventiva=meses_unicos, mes_atual=mes_filtro)
 
 @app.route('/nova_corretiva', methods=['GET', 'POST'])
 @login_required
@@ -281,29 +266,19 @@ def nova_corretiva():
         data_saida_str = request.form.get('data_saida')
         previsao_str = request.form.get('previsao_retorno')
         data_saida = datetime.strptime(data_saida_str, '%Y-%m-%d').date()
-        previsao = datetime.strptime(
-            previsao_str, '%Y-%m-%d').date() if previsao_str else None
+        previsao = datetime.strptime(previsao_str, '%Y-%m-%d').date() if previsao_str else None
 
-        nova_corretiva = ManutencaoExterna(
-            monitor_id=monitor_id,
-            motivo=motivo,
-            empresa=empresa,
-            data_saida=data_saida,
-            previsao_retorno=previsao
-        )
+        nova_corretiva = ManutencaoExterna(monitor_id=monitor_id, motivo=motivo, empresa=empresa, data_saida=data_saida, previsao_retorno=previsao)
         db.session.add(nova_corretiva)
 
         monitor = Monitor.query.get(monitor_id)
         if monitor:
             monitor.status = 'Manutenção'
-
         db.session.commit()
         return redirect(url_for('index'))
 
-    monitores_disponiveis = Monitor.query.filter(
-        Monitor.status != 'Manutenção').all()
+    monitores_disponiveis = Monitor.query.filter(Monitor.status != 'Manutenção').all()
     return render_template('nova_corretiva.html', monitores=monitores_disponiveis)
-
 
 @app.route('/retorno_corretiva', methods=['GET', 'POST'])
 @login_required
@@ -315,29 +290,22 @@ def retorno_corretiva():
         manutencao = ManutencaoExterna.query.get(manutencao_id)
 
         if manutencao:
-            manutencao.data_retorno = datetime.strptime(
-                data_retorno_str, '%Y-%m-%d').date()
+            manutencao.data_retorno = datetime.strptime(data_retorno_str, '%Y-%m-%d').date()
             manutencao.tecnico = tecnico
             manutencao.status = 'Concluída'
-
             monitor = Monitor.query.get(manutencao.monitor_id)
             if monitor:
                 monitor.status = 'Completa'
-
             db.session.commit()
-
         return redirect(url_for('index'))
 
-    manutencoes_pendentes = ManutencaoExterna.query.filter_by(
-        status='Aguardando Retorno').all()
+    manutencoes_pendentes = ManutencaoExterna.query.filter_by(status='Aguardando Retorno').all()
     return render_template('retorno_corretiva.html', manutencoes=manutencoes_pendentes)
-
 
 @app.route('/historico_corretivas')
 @login_required
 def historico_corretivas():
-    todas_corretivas = ManutencaoExterna.query.order_by(
-        ManutencaoExterna.data_saida.desc()).all()
+    todas_corretivas = ManutencaoExterna.query.order_by(ManutencaoExterna.data_saida.desc()).all()
     return render_template('historico_corretivas.html', manutencoes=todas_corretivas)
 
 @app.route('/acessorios')
@@ -355,14 +323,9 @@ def novo_acessorio():
         data_troca_str = request.form.get('data_troca')
         data_troca = datetime.strptime(data_troca_str, '%Y-%m-%d').date()
 
-        nova_troca = Acessorio(
-            monitor_id=monitor_id,
-            tipo=tipo,
-            data_troca=data_troca
-        )
+        nova_troca = Acessorio(monitor_id=monitor_id, tipo=tipo, data_troca=data_troca)
         db.session.add(nova_troca)
         db.session.commit()
-        
         return redirect(url_for('historico_acessorios'))
 
     todos_monitores = Monitor.query.order_by(Monitor.descricao.asc()).all()
@@ -371,55 +334,35 @@ def novo_acessorio():
 @app.route('/relatorios')
 @login_required
 def pagina_relatorios():
-    marcas_db = db.session.query(Monitor.marca).filter(
-        Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
+    marcas_db = db.session.query(Monitor.marca).filter(Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
     marcas_unicas = sorted([m[0] for m in marcas_db])
-    
     return render_template('relatorios.html', marcas=marcas_unicas)
 
 @app.route('/exportar/monitores')
 @login_required
 def exportar_monitores():
-    # Captura a marca que o usuário selecionou na tela de relatórios
     marca_selecionada = request.args.get('marca', '')
-    
     query = Monitor.query
     
     if marca_selecionada:
-        # Se escolheu uma marca, filtra por ela e organiza por MODELO e depois DESCRIÇÃO
         query = query.filter(Monitor.marca == marca_selecionada).order_by(Monitor.modelo.asc(), Monitor.descricao.asc())
         download_name = f"inventario_{marca_selecionada.lower().replace(' ', '_')}.xlsx"
-        sheet_name = marca_selecionada[:30] # Limite de letras do Excel
+        sheet_name = marca_selecionada[:30]
     else:
-        # Se não escolheu marca, traz o Geral ordenando por Marca e Modelo
         query = query.order_by(Monitor.marca.asc(), Monitor.modelo.asc(), Monitor.descricao.asc())
         download_name = "inventario_geral_equipamentos.xlsx"
         sheet_name = 'Inventário Geral'
         
     monitores = query.all()
-    
-    dados = []
-    for m in monitores:
-        dados.append({
-            'Marca': m.marca or 'Sem Marca',
-            'Modelo': m.modelo or 'N/A',
-            'Equipamento': m.descricao,
-            'Patrimônio': m.patrimonio,
-            'S/N': m.numero_serie,
-            'Status': m.status,
-            'Local / Setor': m.local,
-            'Empresa': m.empresa
-        })
+    dados = [{'Marca': m.marca or 'Sem Marca', 'Modelo': m.modelo or 'N/A', 'Equipamento': m.descricao, 'Patrimônio': m.patrimonio, 'S/N': m.numero_serie, 'Status': m.status, 'Local / Setor': m.local, 'Empresa': m.empresa} for m in monitores]
     
     df = pd.DataFrame(dados)
     output = BytesIO()
     
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         if marca_selecionada:
-            # Baixa apenas a planilha da marca selecionada organizada por modelos
             df.to_excel(writer, index=False, sheet_name=sheet_name)
         else:
-            # Mantém a automação de abas para o relatório geral completo
             df.to_excel(writer, index=False, sheet_name='Inventário Geral')
             marcas = df['Marca'].unique()
             for marca in marcas:
@@ -428,35 +371,19 @@ def exportar_monitores():
                 df_marca.to_excel(writer, index=False, sheet_name=nome_aba)
     
     output.seek(0)
-    
-    return send_file(output, 
-                     download_name=download_name, 
-                     as_attachment=True)
+    return send_file(output, download_name=download_name, as_attachment=True)
 
 @app.route('/exportar/preventivas')
 @login_required
 def exportar_preventivas():
     preventivas = Preventiva.query.order_by(Preventiva.mes.asc(), Preventiva.data_preventiva.desc()).all()
-    
-    dados = []
-    for p in preventivas:
-        dados.append({
-            'Mês de Ref.': p.mes,
-            'Data Realizada': p.data_preventiva.strftime('%d/%m/%Y'),
-            'Marca': p.monitor.marca or 'Sem Marca',
-            'Equipamento': p.monitor.descricao,
-            'Patrimônio': p.monitor.patrimonio,
-            'S/N': p.monitor.numero_serie,
-            'Responsável': p.responsavel
-        })
+    dados = [{'Mês de Ref.': p.mes, 'Data Realizada': p.data_preventiva.strftime('%d/%m/%Y'), 'Marca': p.monitor.marca or 'Sem Marca', 'Equipamento': p.monitor.descricao, 'Patrimônio': p.monitor.patrimonio, 'S/N': p.monitor.numero_serie, 'Responsável': p.responsavel} for p in preventivas]
     
     df = pd.DataFrame(dados)
     output = BytesIO()
     
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Todas as Preventivas')
-        
-        # MÁGICA 2: Cria uma aba separada para CADA MÊS automaticamente!
         meses = df['Mês de Ref.'].unique()
         for mes in meses:
             nome_aba = str(mes)[:30]
@@ -466,7 +393,5 @@ def exportar_preventivas():
     output.seek(0)
     return send_file(output, download_name="historico_preventivas_mensal.xlsx", as_attachment=True)
 
-
-# INICIALIZAÇÃO DO SERVIDOR (Sempre no FIM, e apenas com a linha de rodar o app)
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=False)
