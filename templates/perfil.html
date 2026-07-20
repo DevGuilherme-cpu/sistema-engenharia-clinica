@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="conteudo-centralizado" style="max-width: 500px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    
+    <h2 style="color: #333; margin-bottom: 5px; text-align: center;"><i class="fas fa-user-circle"></i> Meu Perfil</h2>
+    <p style="text-align: center; color: #666; margin-bottom: 25px; font-size: 0.9rem;">Gerencie suas informações de acesso com segurança.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div style="padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-weight: bold; 
+                      background-color: {% if category == 'erro' %}#f8d7da{% else %}#d4edda{% endif %};
+                      color: {% if category == 'erro' %}#721c24{% else %}#155724{% endif %};">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 25px; border-left: 4px solid #007bff;">
+        <p style="margin: 5px 0; color: #333;"><strong>Nome:</strong> {{ session.get('usuario_nome') }}</p>
+        <p style="margin: 5px 0; color: #333;"><strong>Nível de Acesso:</strong> {{ session.get('usuario_cargo') }}</p>
+    </div>
+
+    <h4 style="color: #444; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;"><i class="fas fa-key"></i> Alterar Senha</h4>
+
+    <form method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+        <div class="form-group">
+            <label style="font-weight: bold; color: #555;">Nova Senha</label>
+            <input type="password" name="nova_senha" required placeholder="Digite a nova senha" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+        </div>
+
+        <div class="form-group">
+            <label style="font-weight: bold; color: #555;">Confirmar Nova Senha</label>
+            <input type="password" name="confirmar_senha" required placeholder="Repita a nova senha" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+        </div>
+
+        <button type="submit" style="background-color: #28a745; color: white; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: 0.3s;">
+            <i class="fas fa-sync-alt"></i> Atualizar Minha Senha
+        </button>
+    </form>
+</div>
+{% endblock %}
