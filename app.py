@@ -3,127 +3,169 @@ from models import db, Monitor, Preventiva, ManutencaoExterna, Acessorio, Usuari
 from datetime import datetime
 from sqlalchemy import func, or_, text
 from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps 
+from functools import wraps
 import pandas as pd
 from io import BytesIO
-from flask import send_file 
+from flask import send_file
 import os
 import qrcode
 import base64
 
+# --- SEGURANÇA ---
+from dotenv import load_dotenv
+from flask_talisman import Talisman
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+load_dotenv
+
 app = Flask(__name__)
 
-# --- INÍCIO DA CONFIGURAÇÃO DO BANCO ---
-banco_url = os.getenv('DATABASE_URL', 'postgresql://postgres:GuiLandin@localhost:5432/engenharia_clinica')
+Talisman(app, content_security_policy=None)
 
-if banco_url and banco_url.startswith("postgres://"):
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limiter=["200 per day", "50 per hour"],
+    storege_uri="memory://",
+)
+
+# --- INÍCIO DA CONFIGURAÇÃO DO BANCO ---
+banco_url = os.getenv("DATABASE_URL")
+if banco_url and banco_url.startswith("postgre://"):
     banco_url = banco_url.replace("postgres://", "postgresql://", 1)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = banco_url
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'sua_chave_secreta_super_dificil_aqui'
+app.config["SQLALCHEMY_DATABASE_URI"] = banco_url
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.secret_key = os.getenv("SECRET_KEY", "chave_padrao_insegura_apenas_para_dev")
 
 db.init_app(app)
 
 # --- CRIAÇÃO E ATUALIZAÇÃO DO BANCO NA NUVEM ---
 with app.app_context():
     db.create_all()
-    
+
     # Truque para adicionar a coluna 'cargo' sem apagar os dados que já existem
     try:
-        db.session.execute(text("ALTER TABLE usuario ADD COLUMN cargo VARCHAR(50) DEFAULT 'Administrador'"))
+        db.session.execute(
+            text(
+                "ALTER TABLE usuario ADD COLUMN cargo VARCHAR(50) DEFAULT 'Administrador'"
+            )
+        )
         db.session.commit()
     except:
-        db.session.rollback() # Ignora se a coluna já existir
-        
+        db.session.rollback()  # Ignora se a coluna já existir
+
     try:
-        db.session.execute(text("ALTER TABLE usuarios ADD COLUMN cargo VARCHAR(50) DEFAULT 'Administrador'"))
+        db.session.execute(
+            text(
+                "ALTER TABLE usuarios ADD COLUMN cargo VARCHAR(50) DEFAULT 'Administrador'"
+            )
+        )
         db.session.commit()
     except:
         db.session.rollback()
 
     if not Usuario.query.first():
-        senha_criptografada = generate_password_hash('123456')
-        admin = Usuario(nome='Administrador', username='admin', senha=senha_criptografada, cargo='Administrador')
+        senha_criptografada = generate_password_hash("123456")
+        admin = Usuario(
+            nome="Administrador",
+            username="admin",
+            senha=senha_criptografada,
+            cargo="Administrador",
+        )
         db.session.add(admin)
         db.session.commit()
         print("Tabelas e Administrador criados com sucesso na nuvem!")
-# -------------------------------------------------
+
 
 # Trava de Segurança
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'usuario_id' not in session:
-            return redirect(url_for('login'))
+        if "usuario_id" not in session:
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
+
     return decorated_function
 
-# ROTAS DE AUTENTICAÇÃO E USUÁRIOS
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        senha = request.form.get('senha')
-        usuario = Usuario.query.filter_by(username=username).first()
-        
-        if usuario and check_password_hash(usuario.senha, senha):
-            session['usuario_id'] = usuario.id
-            session['usuario_nome'] = usuario.nome
-            session['usuario_cargo'] = usuario.cargo # Salva o cargo na sessão
-            return redirect(url_for('index'))
-        else:
-            flash('Usuário ou senha incorretos!', 'erro')
-            
-    if 'usuario_id' in session:
-        return redirect(url_for('index'))
-        
-    return render_template('login.html')
 
-@app.route('/logout')
+# ROTAS DE AUTENTICAÇÃO E USUÁRIOS
+@app.route("/login", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        senha = request.form.get("senha")
+        usuario = Usuario.query.filter_by(username=username).first()
+
+        if usuario and check_password_hash(usuario.senha, senha):
+            session["usuario_id"] = usuario.id
+            session["usuario_nome"] = usuario.nome
+            session["usuario_cargo"] = usuario.cargo  # Salva o cargo na sessão
+            return redirect(url_for("index"))
+        else:
+            flash("Usuário ou senha incorretos!", "erro")
+
+    if "usuario_id" in session:
+        return redirect(url_for("index"))
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    return redirect(url_for("login"))
 
-@app.route('/cadastrar_usuario', methods=['GET', 'POST'])
+
+@app.route("/cadastrar_usuario", methods=["GET", "POST"])
 @login_required
 def cadastrar_usuario():
     # TRAVA DE HIERARQUIA: Somente Admin e Supervisor entram aqui
-    if session.get('usuario_cargo') not in ['Administrador', 'Supervisor']:
-        return redirect(url_for('index'))
+    if session.get("usuario_cargo") not in ["Administrador", "Supervisor"]:
+        return redirect(url_for("index"))
 
-    if request.method == 'POST':
-        nome = request.form.get('nome')
-        username = request.form.get('username')
-        senha = request.form.get('senha')
-        cargo = request.form.get('cargo')
+    if request.method == "POST":
+        nome = request.form.get("nome")
+        username = request.form.get("username")
+        senha = request.form.get("senha")
+        cargo = request.form.get("cargo")
 
         usuario_existente = Usuario.query.filter_by(username=username).first()
         if usuario_existente:
-            flash('Este nome de usuário já está em uso.', 'erro')
-            return redirect(url_for('cadastrar_usuario'))
+            flash("Este nome de usuário já está em uso.", "erro")
+            return redirect(url_for("cadastrar_usuario"))
 
         senha_criptografada = generate_password_hash(senha)
-        novo_usuario = Usuario(nome=nome, username=username, senha=senha_criptografada, cargo=cargo)
+        novo_usuario = Usuario(
+            nome=nome, username=username, senha=senha_criptografada, cargo=cargo
+        )
         db.session.add(novo_usuario)
         db.session.commit()
 
         print(f"Usuário {nome} cadastrado com sucesso como {cargo}!")
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
-    return render_template('cadastrar_usuario.html')
+    return render_template("cadastrar_usuario.html")
+
 
 # ROTAS DO SISTEMA
-@app.route('/')
+@app.route("/")
 @login_required
 def index():
     total = Monitor.query.count()
-    completos = Monitor.query.filter_by(status='Completa').count()
-    pendentes = Monitor.query.filter_by(status='Pendente').count()
-    manutencao = Monitor.query.filter_by(status='Manutenção').count()
-    desaparecidos = Monitor.query.filter_by(status='Desaparecido').count()
-    
-    marcas_db = db.session.query(func.trim(func.upper(Monitor.marca)), func.count(Monitor.id)).filter(Monitor.marca.isnot(None), Monitor.marca != '').group_by(func.trim(func.upper(Monitor.marca))).all() 
+    completos = Monitor.query.filter_by(status="Completa").count()
+    pendentes = Monitor.query.filter_by(status="Pendente").count()
+    manutencao = Monitor.query.filter_by(status="Manutenção").count()
+    desaparecidos = Monitor.query.filter_by(status="Desaparecido").count()
+
+    marcas_db = (
+        db.session.query(func.trim(func.upper(Monitor.marca)), func.count(Monitor.id))
+        .filter(Monitor.marca.isnot(None), Monitor.marca != "")
+        .group_by(func.trim(func.upper(Monitor.marca)))
+        .all()
+    )
     nomes_marcas = [m[0] for m in marcas_db]
     qtd_marcas = [m[1] for m in marcas_db]
 
@@ -131,197 +173,251 @@ def index():
     alertas_vencidos = []
     alertas_avencer = []
 
-    equipamentos_ativos = Monitor.query.filter(Monitor.status != 'Desaparecido').all()
+    equipamentos_ativos = Monitor.query.filter(Monitor.status != "Desaparecido").all()
 
     for m in equipamentos_ativos:
-        ultima_prev = Preventiva.query.filter_by(monitor_id=m.id).order_by(Preventiva.data_preventiva.desc()).first()
-        
+        ultima_prev = (
+            Preventiva.query.filter_by(monitor_id=m.id)
+            .order_by(Preventiva.data_preventiva.desc())
+            .first()
+        )
+
         if ultima_prev:
             dias_passados = (hoje - ultima_prev.data_preventiva).days
-            dias_para_vencer = 365 - dias_passados 
+            dias_para_vencer = 365 - dias_passados
 
             if dias_para_vencer < 0:
-                alertas_vencidos.append({
-                    'id': m.id,
-                    'nome': f"{m.descricao} ({m.marca})",
-                    'patrimonio': m.patrimonio or m.numero_serie or 'Sem Registro',
-                    'atraso': abs(dias_para_vencer),
-                    'data': ultima_prev.data_preventiva.strftime('%d/%m/%Y')
-                })
+                alertas_vencidos.append(
+                    {
+                        "id": m.id,
+                        "nome": f"{m.descricao} ({m.marca})",
+                        "patrimonio": m.patrimonio or m.numero_serie or "Sem Registro",
+                        "atraso": abs(dias_para_vencer),
+                        "data": ultima_prev.data_preventiva.strftime("%d/%m/%Y"),
+                    }
+                )
             elif 0 <= dias_para_vencer <= 30:
-                alertas_avencer.append({
-                    'id': m.id,
-                    'nome': f"{m.descricao} ({m.marca})",
-                    'patrimonio': m.patrimonio or m.numero_serie or 'Sem Registro',
-                    'restantes': dias_para_vencer,
-                    'data': ultima_prev.data_preventiva.strftime('%d/%m/%Y')
-                })
-    
-    alertas_vencidos = sorted(alertas_vencidos, key=lambda x: x['atraso'], reverse=True)
-    alertas_avencer = sorted(alertas_avencer, key=lambda x: x['restantes'])
+                alertas_avencer.append(
+                    {
+                        "id": m.id,
+                        "nome": f"{m.descricao} ({m.marca})",
+                        "patrimonio": m.patrimonio or m.numero_serie or "Sem Registro",
+                        "restantes": dias_para_vencer,
+                        "data": ultima_prev.data_preventiva.strftime("%d/%m/%Y"),
+                    }
+                )
+
+    alertas_vencidos = sorted(alertas_vencidos, key=lambda x: x["atraso"], reverse=True)
+    alertas_avencer = sorted(alertas_avencer, key=lambda x: x["restantes"])
 
     return render_template(
-        'index.html', 
-        total=total, completos=completos, pendentes=pendentes, 
-        manutencao=manutencao, desaparecidos=desaparecidos,
-        nomes_marcas=nomes_marcas, qtd_marcas=qtd_marcas,
-        alertas_vencidos=alertas_vencidos, alertas_avencer=alertas_avencer # <- Passamos as listas para a tela
+        "index.html",
+        total=total,
+        completos=completos,
+        pendentes=pendentes,
+        manutencao=manutencao,
+        desaparecidos=desaparecidos,
+        nomes_marcas=nomes_marcas,
+        qtd_marcas=qtd_marcas,
+        alertas_vencidos=alertas_vencidos,
+        alertas_avencer=alertas_avencer,  # <- Passamos as listas para a tela
     )
 
-@app.route('/cadastrar_monitor', methods=['GET', 'POST'])
+
+@app.route("/cadastrar_monitor", methods=["GET", "POST"])
 @login_required
 def cadastrar_monitor():
-    if request.method == 'POST':
-        numero_serie_digitado = request.form.get('numero_serie')
-        patrimonio_digitado = request.form.get('patrimonio')
+    if request.method == "POST":
+        numero_serie_digitado = request.form.get("numero_serie")
+        patrimonio_digitado = request.form.get("patrimonio")
 
         if numero_serie_digitado:
-            existente_sn = Monitor.query.filter_by(numero_serie=numero_serie_digitado).first()
+            existente_sn = Monitor.query.filter_by(
+                numero_serie=numero_serie_digitado
+            ).first()
             if existente_sn:
-                flash(f'Erro: O Número de Série {numero_serie_digitado} já está cadastrado no sistema!', 'erro')
-                return redirect(url_for('cadastrar_monitor'))
+                flash(
+                    f"Erro: O Número de Série {numero_serie_digitado} já está cadastrado no sistema!",
+                    "erro",
+                )
+                return redirect(url_for("cadastrar_monitor"))
 
         if patrimonio_digitado:
-            existente_pat = Monitor.query.filter_by(patrimonio=patrimonio_digitado).first()
+            existente_pat = Monitor.query.filter_by(
+                patrimonio=patrimonio_digitado
+            ).first()
             if existente_pat:
-                flash(f'Erro: O Patrimônio {patrimonio_digitado} já está cadastrado!', 'erro')
-                return redirect(url_for('cadastrar_monitor'))
+                flash(
+                    f"Erro: O Patrimônio {patrimonio_digitado} já está cadastrado!",
+                    "erro",
+                )
+                return redirect(url_for("cadastrar_monitor"))
 
         novo_monitor = Monitor(
-            descricao=request.form.get('descricao'),
-            marca=request.form.get('marca'),
-            modelo=request.form.get('modelo'),
+            descricao=request.form.get("descricao"),
+            marca=request.form.get("marca"),
+            modelo=request.form.get("modelo"),
             numero_serie=numero_serie_digitado,
             patrimonio=patrimonio_digitado,
-            local=request.form.get('local'),
-            status=request.form.get('status'),
-            empresa=request.form.get('empresa'),
-            contrato=request.form.get('contrato')
+            local=request.form.get("local"),
+            status=request.form.get("status"),
+            empresa=request.form.get("empresa"),
+            contrato=request.form.get("contrato"),
         )
 
         db.session.add(novo_monitor)
         db.session.commit()
-        
-        return redirect(url_for('index'))
 
-    return render_template('cadastrar_monitor.html')
+        return redirect(url_for("index"))
 
-@app.route('/monitores')
+    return render_template("cadastrar_monitor.html")
+
+
+@app.route("/monitores")
 @login_required
 def listar_monitores():
-    marca_filtro = request.args.get('marca')
-    
-    marcas_db = db.session.query(func.trim(func.upper(Monitor.marca))).filter(
-        Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
-    
+    marca_filtro = request.args.get("marca")
+
+    marcas_db = (
+        db.session.query(func.trim(func.upper(Monitor.marca)))
+        .filter(Monitor.marca.isnot(None), Monitor.marca != "")
+        .distinct()
+        .all()
+    )
+
     marcas_unicas = sorted(list(set([m[0] for m in marcas_db if m[0]])))
-    
+
     query = Monitor.query.order_by(Monitor.descricao.asc())
 
     if marca_filtro:
-        query = query.filter(func.trim(func.upper(Monitor.marca)) == marca_filtro.strip().upper())
+        query = query.filter(
+            func.trim(func.upper(Monitor.marca)) == marca_filtro.strip().upper()
+        )
 
     todos_monitores = query.all()
 
-    return render_template('monitores.html',
-                           monitores=todos_monitores,
-                           marcas=marcas_unicas,
-                           marca_atual=marca_filtro)
+    return render_template(
+        "monitores.html",
+        monitores=todos_monitores,
+        marcas=marcas_unicas,
+        marca_atual=marca_filtro,
+    )
 
-@app.route('/excluir_monitor/<int:id>')
+
+@app.route("/excluir_monitor/<int:id>")
 @login_required
 def excluir_monitor(id):
     monitor = Monitor.query.get_or_404(id)
     db.session.delete(monitor)
     db.session.commit()
-    return redirect(url_for('listar_monitores'))
+    return redirect(url_for("listar_monitores"))
 
-@app.route('/etiqueta/<int:id>')
+
+@app.route("/etiqueta/<int:id>")
 @login_required
 def gerar_etiqueta(id):
     monitor = Monitor.query.get_or_404(id)
-    
+
     # AGORA O QR CODE APONTA PARA A FICHA MOBILE DO EQUIPAMENTO
-    link = url_for('detalhes_equipamento', id=monitor.id, _external=True)
+    link = url_for("detalhes_equipamento", id=monitor.id, _external=True)
     qr = qrcode.QRCode(version=1, box_size=10, border=2)
     qr.add_data(link)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
-    
+
     buffered = BytesIO()
     img.save(buffered, format="PNG")
-    qr_code_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-    
-    return render_template('etiqueta.html', monitor=monitor, qr_code=qr_code_base64)
+    qr_code_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-@app.route('/equipamento/<int:id>')
+    return render_template("etiqueta.html", monitor=monitor, qr_code=qr_code_base64)
+
+
+@app.route("/equipamento/<int:id>")
 @login_required
 def detalhes_equipamento(id):
     monitor = Monitor.query.get_or_404(id)
-    preventivas = Preventiva.query.filter_by(monitor_id=id).order_by(Preventiva.data_preventiva.desc()).all()
-    corretivas = ManutencaoExterna.query.filter_by(monitor_id=id).order_by(ManutencaoExterna.data_saida.desc()).all()
-    
-    return render_template('detalhes_equipamento.html', 
-                           monitor=monitor, 
-                           preventivas=preventivas, 
-                           corretivas=corretivas)
+    preventivas = (
+        Preventiva.query.filter_by(monitor_id=id)
+        .order_by(Preventiva.data_preventiva.desc())
+        .all()
+    )
+    corretivas = (
+        ManutencaoExterna.query.filter_by(monitor_id=id)
+        .order_by(ManutencaoExterna.data_saida.desc())
+        .all()
+    )
 
-@app.route('/editar_monitor/<int:id>', methods=['GET', 'POST'])
+    return render_template(
+        "detalhes_equipamento.html",
+        monitor=monitor,
+        preventivas=preventivas,
+        corretivas=corretivas,
+    )
+
+
+@app.route("/editar_monitor/<int:id>", methods=["GET", "POST"])
 @login_required
 def editar_monitor(id):
     monitor = Monitor.query.get_or_404(id)
-    if request.method == 'POST':
-        monitor.descricao = request.form.get('descricao')
-        monitor.marca = request.form.get('marca')
-        monitor.modelo = request.form.get('modelo')
-        monitor.numero_serie = request.form.get('numero_serie')
-        monitor.patrimonio = request.form.get('patrimonio')
-        monitor.local = request.form.get('local')
-        monitor.status = request.form.get('status')
-        monitor.empresa = request.form.get('empresa')
+    if request.method == "POST":
+        monitor.descricao = request.form.get("descricao")
+        monitor.marca = request.form.get("marca")
+        monitor.modelo = request.form.get("modelo")
+        monitor.numero_serie = request.form.get("numero_serie")
+        monitor.patrimonio = request.form.get("patrimonio")
+        monitor.local = request.form.get("local")
+        monitor.status = request.form.get("status")
+        monitor.empresa = request.form.get("empresa")
         db.session.commit()
-        return redirect(url_for('listar_monitores'))
-    return render_template('editar_monitor.html', monitor=monitor)
+        return redirect(url_for("listar_monitores"))
+    return render_template("editar_monitor.html", monitor=monitor)
 
-@app.route('/cadastrar_preventiva', methods=['GET', 'POST'])
+
+@app.route("/cadastrar_preventiva", methods=["GET", "POST"])
 @login_required
 def cadastrar_preventiva():
-    if request.method == 'POST':
-        monitor_id = request.form.get('monitor_id')
-        data_str = request.form.get('data_preventiva')
-        mes = request.form.get('mes')
-        responsavel = request.form.get('responsavel')
-        data_obj = datetime.strptime(data_str, '%Y-%m-%d').date()
+    if request.method == "POST":
+        monitor_id = request.form.get("monitor_id")
+        data_str = request.form.get("data_preventiva")
+        mes = request.form.get("mes")
+        responsavel = request.form.get("responsavel")
+        data_obj = datetime.strptime(data_str, "%Y-%m-%d").date()
 
-        nova_preventiva = Preventiva(monitor_id=monitor_id, data_preventiva=data_obj, mes=mes, responsavel=responsavel)
+        nova_preventiva = Preventiva(
+            monitor_id=monitor_id,
+            data_preventiva=data_obj,
+            mes=mes,
+            responsavel=responsavel,
+        )
         db.session.add(nova_preventiva)
 
         monitor = Monitor.query.get(monitor_id)
         if monitor:
-            monitor.status = 'Completa'
+            monitor.status = "Completa"
         db.session.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
     todos_monitores = Monitor.query.all()
-    return render_template('cadastrar_preventiva.html', monitores=todos_monitores)
+    return render_template("cadastrar_preventiva.html", monitores=todos_monitores)
 
-@app.route('/historico_preventivas')
+
+@app.route("/historico_preventivas")
 @login_required
 def historico_preventivas():
-    termo_busca = request.args.get('q', '') 
-    tipo_filtro = request.args.get('tipo', '') 
-    mes_filtro = request.args.get('mes', '')
-    marca_filtro = request.args.get('marca', '')
+    termo_busca = request.args.get("q", "")
+    tipo_filtro = request.args.get("tipo", "")
+    mes_filtro = request.args.get("mes", "")
+    marca_filtro = request.args.get("marca", "")
 
     query = Preventiva.query.join(Monitor)
 
     if termo_busca:
         query = query.filter(
             or_(
-                Monitor.patrimonio.ilike(f'%{termo_busca}%'),
-                Monitor.numero_serie.ilike(f'%{termo_busca}%'),
-                Monitor.descricao.ilike(f'%{termo_busca}%'),
-                Preventiva.responsavel.ilike(f'%{termo_busca}%')
+                Monitor.patrimonio.ilike(f"%{termo_busca}%"),
+                Monitor.numero_serie.ilike(f"%{termo_busca}%"),
+                Monitor.descricao.ilike(f"%{termo_busca}%"),
+                Preventiva.responsavel.ilike(f"%{termo_busca}%"),
             )
         )
     if tipo_filtro:
@@ -333,172 +429,241 @@ def historico_preventivas():
 
     todas_preventivas = query.order_by(Preventiva.data_preventiva.desc()).all()
 
-    tipos_equipamento = db.session.query(Monitor.descricao).filter(Monitor.descricao.isnot(None), Monitor.descricao != '').distinct().all()
+    tipos_equipamento = (
+        db.session.query(Monitor.descricao)
+        .filter(Monitor.descricao.isnot(None), Monitor.descricao != "")
+        .distinct()
+        .all()
+    )
     tipos_unicos = sorted([t[0] for t in tipos_equipamento])
-    marcas_equipamento = db.session.query(Monitor.marca).filter(Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
+    marcas_equipamento = (
+        db.session.query(Monitor.marca)
+        .filter(Monitor.marca.isnot(None), Monitor.marca != "")
+        .distinct()
+        .all()
+    )
     marcas_unicas = sorted([m[0] for m in marcas_equipamento])
-    meses_preventiva = db.session.query(Preventiva.mes).filter(Preventiva.mes.isnot(None), Preventiva.mes != '').distinct().all()
+    meses_preventiva = (
+        db.session.query(Preventiva.mes)
+        .filter(Preventiva.mes.isnot(None), Preventiva.mes != "")
+        .distinct()
+        .all()
+    )
     meses_unicos = sorted([m[0] for m in meses_preventiva])
 
-    return render_template('historico_preventivas.html', 
-                           preventivas=todas_preventivas, termo_busca=termo_busca,
-                           tipos_equipamento=tipos_unicos, tipo_atual=tipo_filtro,
-                           marcas_equipamento=marcas_unicas, marca_atual=marca_filtro,
-                           meses_preventiva=meses_unicos, mes_atual=mes_filtro)
+    return render_template(
+        "historico_preventivas.html",
+        preventivas=todas_preventivas,
+        termo_busca=termo_busca,
+        tipos_equipamento=tipos_unicos,
+        tipo_atual=tipo_filtro,
+        marcas_equipamento=marcas_unicas,
+        marca_atual=marca_filtro,
+        meses_preventiva=meses_unicos,
+        mes_atual=mes_filtro,
+    )
 
-@app.route('/nova_corretiva', methods=['GET', 'POST'])
+
+@app.route("/nova_corretiva", methods=["GET", "POST"])
 @login_required
 def nova_corretiva():
-    if request.method == 'POST':
-        monitor_id = request.form.get('monitor_id')
-        motivo = request.form.get('motivo')
-        empresa = request.form.get('empresa')
-        data_saida_str = request.form.get('data_saida')
-        previsao_str = request.form.get('previsao_retorno')
-        data_saida = datetime.strptime(data_saida_str, '%Y-%m-%d').date()
-        previsao = datetime.strptime(previsao_str, '%Y-%m-%d').date() if previsao_str else None
+    if request.method == "POST":
+        monitor_id = request.form.get("monitor_id")
+        motivo = request.form.get("motivo")
+        empresa = request.form.get("empresa")
+        data_saida_str = request.form.get("data_saida")
+        previsao_str = request.form.get("previsao_retorno")
+        data_saida = datetime.strptime(data_saida_str, "%Y-%m-%d").date()
+        previsao = (
+            datetime.strptime(previsao_str, "%Y-%m-%d").date() if previsao_str else None
+        )
 
-        nova_corretiva = ManutencaoExterna(monitor_id=monitor_id, motivo=motivo, empresa=empresa, data_saida=data_saida, previsao_retorno=previsao)
+        nova_corretiva = ManutencaoExterna(
+            monitor_id=monitor_id,
+            motivo=motivo,
+            empresa=empresa,
+            data_saida=data_saida,
+            previsao_retorno=previsao,
+        )
         db.session.add(nova_corretiva)
 
         monitor = Monitor.query.get(monitor_id)
         if monitor:
-            monitor.status = 'Manutenção'
+            monitor.status = "Manutenção"
         db.session.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
-    monitores_disponiveis = Monitor.query.filter(Monitor.status != 'Manutenção').all()
-    return render_template('nova_corretiva.html', monitores=monitores_disponiveis)
+    monitores_disponiveis = Monitor.query.filter(Monitor.status != "Manutenção").all()
+    return render_template("nova_corretiva.html", monitores=monitores_disponiveis)
 
-@app.route('/retorno_corretiva', methods=['GET', 'POST'])
+
+@app.route("/retorno_corretiva", methods=["GET", "POST"])
 @login_required
 def retorno_corretiva():
-    if request.method == 'POST':
-        manutencao_id = request.form.get('manutencao_id')
-        data_retorno_str = request.form.get('data_retorno')
-        tecnico = request.form.get('tecnico')
+    if request.method == "POST":
+        manutencao_id = request.form.get("manutencao_id")
+        data_retorno_str = request.form.get("data_retorno")
+        tecnico = request.form.get("tecnico")
         manutencao = ManutencaoExterna.query.get(manutencao_id)
 
         if manutencao:
-            manutencao.data_retorno = datetime.strptime(data_retorno_str, '%Y-%m-%d').date()
+            manutencao.data_retorno = datetime.strptime(
+                data_retorno_str, "%Y-%m-%d"
+            ).date()
             manutencao.tecnico = tecnico
-            manutencao.status = 'Concluída'
+            manutencao.status = "Concluída"
             monitor = Monitor.query.get(manutencao.monitor_id)
             if monitor:
-                monitor.status = 'Completa'
+                monitor.status = "Completa"
             db.session.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
-    manutencoes_pendentes = ManutencaoExterna.query.filter_by(status='Aguardando Retorno').all()
-    return render_template('retorno_corretiva.html', manutencoes=manutencoes_pendentes)
+    manutencoes_pendentes = ManutencaoExterna.query.filter_by(
+        status="Aguardando Retorno"
+    ).all()
+    return render_template("retorno_corretiva.html", manutencoes=manutencoes_pendentes)
 
-@app.route('/historico_corretivas')
+
+@app.route("/historico_corretivas")
 @login_required
 def historico_corretivas():
-    todas_corretivas = ManutencaoExterna.query.order_by(ManutencaoExterna.data_saida.desc()).all()
-    return render_template('historico_corretivas.html', manutencoes=todas_corretivas)
+    todas_corretivas = ManutencaoExterna.query.order_by(
+        ManutencaoExterna.data_saida.desc()
+    ).all()
+    return render_template("historico_corretivas.html", manutencoes=todas_corretivas)
 
-@app.route('/acessorios')
+
+@app.route("/acessorios")
 @login_required
 def historico_acessorios():
     todas_trocas = Acessorio.query.order_by(Acessorio.data_troca.desc()).all()
-    return render_template('acessorios.html', acessorios=todas_trocas)
+    return render_template("acessorios.html", acessorios=todas_trocas)
 
-@app.route('/novo_acessorio', methods=['GET', 'POST'])
+
+@app.route("/novo_acessorio", methods=["GET", "POST"])
 @login_required
 def novo_acessorio():
-    if request.method == 'POST':
-        monitor_id = request.form.get('monitor_id')
-        tipo = request.form.get('tipo')
-        data_troca_str = request.form.get('data_troca')
-        data_troca = datetime.strptime(data_troca_str, '%Y-%m-%d').date()
+    if request.method == "POST":
+        monitor_id = request.form.get("monitor_id")
+        tipo = request.form.get("tipo")
+        data_troca_str = request.form.get("data_troca")
+        data_troca = datetime.strptime(data_troca_str, "%Y-%m-%d").date()
 
         nova_troca = Acessorio(monitor_id=monitor_id, tipo=tipo, data_troca=data_troca)
         db.session.add(nova_troca)
         db.session.commit()
-        return redirect(url_for('historico_acessorios'))
+        return redirect(url_for("historico_acessorios"))
 
     todos_monitores = Monitor.query.order_by(Monitor.descricao.asc()).all()
-    return render_template('novo_acessorio.html', monitores=todos_monitores)
+    return render_template("novo_acessorio.html", monitores=todos_monitores)
 
-@app.route('/relatorios')
+
+@app.route("/relatorios")
 @login_required
 def pagina_relatorios():
-    marcas_db = db.session.query(func.trim(func.upper(Monitor.marca))).filter(
-        Monitor.marca.isnot(None), Monitor.marca != '').distinct().all()
-    
-    marcas_unicas = sorted(list(set([m[0] for m in marcas_db if m[0]])))
-    
-    return render_template('relatorios.html', marcas=marcas_unicas)
+    marcas_db = (
+        db.session.query(func.trim(func.upper(Monitor.marca)))
+        .filter(Monitor.marca.isnot(None), Monitor.marca != "")
+        .distinct()
+        .all()
+    )
 
-@app.route('/exportar/monitores')
+    marcas_unicas = sorted(list(set([m[0] for m in marcas_db if m[0]])))
+
+    return render_template("relatorios.html", marcas=marcas_unicas)
+
+
+@app.route("/exportar/monitores")
 @login_required
 def exportar_monitores():
-    marca_selecionada = request.args.get('marca', '')
-    
+    marca_selecionada = request.args.get("marca", "")
+
     query = Monitor.query
-    
+
     if marca_selecionada:
-        query = query.filter(func.trim(func.upper(Monitor.marca)) == marca_selecionada.strip().upper()).order_by(Monitor.modelo.asc(), Monitor.descricao.asc())
+        query = query.filter(
+            func.trim(func.upper(Monitor.marca)) == marca_selecionada.strip().upper()
+        ).order_by(Monitor.modelo.asc(), Monitor.descricao.asc())
         download_name = f"inventario_{marca_selecionada.lower().replace(' ', '_')}.xlsx"
-        sheet_name = marca_selecionada[:30] 
+        sheet_name = marca_selecionada[:30]
     else:
-        query = query.order_by(Monitor.marca.asc(), Monitor.modelo.asc(), Monitor.descricao.asc())
+        query = query.order_by(
+            Monitor.marca.asc(), Monitor.modelo.asc(), Monitor.descricao.asc()
+        )
         download_name = "inventario_geral_equipamentos.xlsx"
-        sheet_name = 'Inventário Geral'
-        
+        sheet_name = "Inventário Geral"
+
     monitores = query.all()
-    
+
     dados = []
     for m in monitores:
-        dados.append({
-            'Marca': m.marca or 'Sem Marca',
-            'Modelo': m.modelo or 'N/A',
-            'Equipamento': m.descricao,
-            'Patrimônio': m.patrimonio,
-            'S/N': m.numero_serie,
-            'Status': m.status,
-            'Local / Setor': m.local,
-            'Empresa': m.empresa
-        })
-    
+        dados.append(
+            {
+                "Marca": m.marca or "Sem Marca",
+                "Modelo": m.modelo or "N/A",
+                "Equipamento": m.descricao,
+                "Patrimônio": m.patrimonio,
+                "S/N": m.numero_serie,
+                "Status": m.status,
+                "Local / Setor": m.local,
+                "Empresa": m.empresa,
+            }
+        )
+
     df = pd.DataFrame(dados)
     output = BytesIO()
-    
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
         if marca_selecionada:
             df.to_excel(writer, index=False, sheet_name=sheet_name)
         else:
-            df.to_excel(writer, index=False, sheet_name='Inventário Geral')
-            marcas = df['Marca'].unique()
+            df.to_excel(writer, index=False, sheet_name="Inventário Geral")
+            marcas = df["Marca"].unique()
             for marca in marcas:
-                nome_aba = str(marca)[:30].replace('/', '-') 
-                df_marca = df[df['Marca'] == marca]
+                nome_aba = str(marca)[:30].replace("/", "-")
+                df_marca = df[df["Marca"] == marca]
                 df_marca.to_excel(writer, index=False, sheet_name=nome_aba)
-    
+
     output.seek(0)
-    
+
     return send_file(output, download_name=download_name, as_attachment=True)
 
-@app.route('/exportar/preventivas')
+
+@app.route("/exportar/preventivas")
 @login_required
 def exportar_preventivas():
-    preventivas = Preventiva.query.order_by(Preventiva.mes.asc(), Preventiva.data_preventiva.desc()).all()
-    dados = [{'Mês de Ref.': p.mes, 'Data Realizada': p.data_preventiva.strftime('%d/%m/%Y'), 'Marca': p.monitor.marca or 'Sem Marca', 'Equipamento': p.monitor.descricao, 'Patrimônio': p.monitor.patrimonio, 'S/N': p.monitor.numero_serie, 'Responsável': p.responsavel} for p in preventivas]
-    
+    preventivas = Preventiva.query.order_by(
+        Preventiva.mes.asc(), Preventiva.data_preventiva.desc()
+    ).all()
+    dados = [
+        {
+            "Mês de Ref.": p.mes,
+            "Data Realizada": p.data_preventiva.strftime("%d/%m/%Y"),
+            "Marca": p.monitor.marca or "Sem Marca",
+            "Equipamento": p.monitor.descricao,
+            "Patrimônio": p.monitor.patrimonio,
+            "S/N": p.monitor.numero_serie,
+            "Responsável": p.responsavel,
+        }
+        for p in preventivas
+    ]
+
     df = pd.DataFrame(dados)
     output = BytesIO()
-    
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Todas as Preventivas')
-        meses = df['Mês de Ref.'].unique()
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Todas as Preventivas")
+        meses = df["Mês de Ref."].unique()
         for mes in meses:
             nome_aba = str(mes)[:30]
-            df_mes = df[df['Mês de Ref.'] == mes]
+            df_mes = df[df["Mês de Ref."] == mes]
             df_mes.to_excel(writer, index=False, sheet_name=nome_aba)
-    
-    output.seek(0)
-    return send_file(output, download_name="historico_preventivas_mensal.xlsx", as_attachment=True)
 
-if __name__ == '__main__':
+    output.seek(0)
+    return send_file(
+        output, download_name="historico_preventivas_mensal.xlsx", as_attachment=True
+    )
+
+
+if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
