@@ -150,7 +150,31 @@
         {% block content %}{% endblock %}
     </main>
 
+    <div id="cookie-banner" style="display: none; position: fixed; bottom: 0; left: 0; width: 100%; background-color: #343a40; color: white; padding: 15px 20px; box-sizing: border-box; z-index: 9999; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div style="flex: 1; min-width: 250px; font-size: 0.9rem; line-height: 1.4;">
+            <i class="fas fa-cookie-bite" style="color: #ffc107; margin-right: 5px;"></i> 
+            Nós usamos cookies essenciais para garantir a segurança e o funcionamento do sistema. Ao continuar navegando, você concorda com a nossa 
+            <a href="/privacidade" style="color: #66b3ff; text-decoration: underline;">Política de Privacidade</a>.
+        </div>
+        <button onclick="aceitarCookies()" style="background-color: #28a745; color: white; border: none; padding: 10px 25px; border-radius: 5px; font-weight: bold; cursor: pointer; white-space: nowrap; transition: 0.3s;">
+            Entendi e Aceito
+        </button>
+    </div>
+
     <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Verifica no armazenamento local do navegador se o usuário já aceitou
+            if (!localStorage.getItem("cookiesAceitos")) {
+                document.getElementById("cookie-banner").style.display = "flex";
+            }
+        });
+
+        function aceitarCookies() {
+            // Salva a aceitação no navegador e esconde o banner
+            localStorage.setItem("cookiesAceitos", "sim");
+            document.getElementById("cookie-banner").style.display = "none";
+        }
+
         function toggleSubmenu(id) {
             const submenu = document.getElementById(id);
             submenu.classList.toggle('active');
