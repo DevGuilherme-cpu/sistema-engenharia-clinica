@@ -122,8 +122,8 @@ def logout():
 @app.route("/cadastrar_usuario", methods=["GET", "POST"])
 @login_required
 def cadastrar_usuario():
-    # TRAVA DE HIERARQUIA: Somente Admin e Supervisor entram aqui
     if session.get("usuario_cargo") not in ["Administrador", "Supervisor"]:
+        flash("Acesso Negado! Apenas adminstrador podem cadastrar novos usuários")
         return redirect(url_for("index"))
 
     if request.method == "POST":
@@ -134,17 +134,21 @@ def cadastrar_usuario():
 
         usuario_existente = Usuario.query.filter_by(username=username).first()
         if usuario_existente:
-            flash("Este nome de usuário já está em uso.", "erro")
+            flash("Erro: Este e-mail/usuário já está cadastrado no sistema!", "erro")
             return redirect(url_for("cadastrar_usuario"))
 
         senha_criptografada = generate_password_hash(senha)
         novo_usuario = Usuario(
-            nome=nome, username=username, senha=senha_criptografada, cargo=cargo
+            nome=nome,
+            email=email,  # noqa: F821
+            senha=senha_criptografada,
+            cargo=cargo,
         )
+
         db.session.add(novo_usuario)
         db.session.commit()
 
-        print(f"Usuário {nome} cadastrado com sucesso como {cargo}!")
+        flash(f"Usuário {nome} criado com sucesso!", "sucesso")
         return redirect(url_for("index"))
 
     return render_template("cadastrar_usuario.html")
