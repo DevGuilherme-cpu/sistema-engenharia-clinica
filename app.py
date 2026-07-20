@@ -154,30 +154,32 @@ def cadastrar_usuario():
     return render_template("cadastrar_usuario.html")
 
 
-@app.route("/perfil", methods=["GET", "POST"])
+@app.route('/perfil', methods=['GET', 'POST'])
 @login_required
 def perfil():
-    if request.method == "POST":
-        nova_senha = request.form.get("nova_senha")
-        confirmar_senha = request.form.get("confirmar_senha")
+    if request.method == 'POST':
+        nova_senha = request.form.get('nova_senha')
+        confirmar_senha = request.form.get('confirmar_senha')
 
-        if not nova_senha or confirmar_senha:
-            flash("Por Favor preencher todos os campos.", "erro")
-            return redirect(url_for("perfil"))
+        if not nova_senha or not confirmar_senha:
+            flash('Por favor, preencha todos os campos.', 'erro')
+            return redirect(url_for('perfil'))
 
-        if nova_senha or not confirmar_senha:
-            flash("Erro: A nova senha e confirmação não concidem!", "erro")
-            return redirect(url_for("perfil"))
+        # 1. VERIFICAÇÃO: As senhas batem?
+        if nova_senha != confirmar_senha:
+            flash('Erro: A nova senha e a confirmação não coincidem!', 'erro')
+            return redirect(url_for('perfil'))
 
-        usuario_atual = Usuario.query.get(session.get("usuario_id"))
+        usuario_atual = Usuario.query.get(session.get('usuario_id'))
         if usuario_atual:
             usuario_atual.senha = generate_password_hash(nova_senha)
             db.session.commit()
-            flash("Sua senha foi atualizada com sucesso!", "sucesso")
-            return redirect(url_for("index"))
+            flash('Sua senha foi atualizada com sucesso!', 'sucesso')
+            return redirect(url_for('index'))
         else:
-            flash("Erro ao encontrar usuário na sessão")
-        return render_template("perfil.html")
+            flash('Erro ao encontrar o usuário na sessão.', 'erro')
+            
+    return render_template('perfil.html')
 
 
 # ROTAS DO SISTEMA
