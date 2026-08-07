@@ -121,8 +121,15 @@ def cadastrar_manutencao(request):
         return redirect('visualizar_equipamento', id=equipamento.id)
     
     equipamento_id_url = request.GET.get('equipamento', '')
+    tipo_url = request.GET.get('tipo', '').lower()
+
     equipamentos = Equipamento.objects.all()
-    return render(request, 'Manutencoes/cadastrar.html', {'active_page': 'manutencoes', 'equipamentos': equipamentos, 'equipamento_id_url': equipamento_id_url})
+    return render(request, 'Manutencoes/cadastrar.html', {
+        'active_page': 'manutencoes', 
+        'equipamentos': equipamentos, 
+        'equipamento_id_url': equipamento_id_url,
+        'tipo_url': tipo_url,
+        })
 
 def sair(request):
     logout(request)

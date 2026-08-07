@@ -213,41 +213,24 @@
           </li>
 
           <li class="menu-item" onclick="toggleSubmenu('sub-equipamentos')">
-            <a href="javascript:void(0)"
-              ><i class="fas fa-briefcase-medical" style="width: 20px"></i>
-              Equipamentos
-              <i
-                class="fas fa-chevron-down"
-                style="float: right; margin-top: 5px; font-size: 0.8rem"
-              ></i
-            ></a>
+            <a href="javascript:void(0)"><i class="fas fa-briefcase-medical" style="width: 20px;"></i> Equipamentos
+                <i class="fas fa-chevron-down" style="float: right; margin-top: 5px; font-size: 0.8rem;"></i></a>
             <ul id="sub-equipamentos" class="submenu">
-              <li>
-                <a href="{% url 'equipamentos' %}"
-                  ><i class="fas fa-list" style="width: 20px"></i> Relação
-                  Geral</a
-                >
-              </li>
-              <li>
-                <a href="{% url 'cadastrar_equipamento' %}"
-                  ><i class="fas fa-plus" style="width: 20px"></i> Cadastrar
-                  Equipamento</a
-                >
-              </li>
-              <li>
-                <a href="#"
-                  ><i class="fas fa-check-circle" style="width: 20px"></i>
-                  Preventivas</a
-                >
-              </li>
-              <li>
-                <a href="#"
-                  ><i class="fas fa-tools" style="width: 20px"></i>
-                  Corretivas</a
-                >
-              </li>
+                <li><a href="{% url 'equipamentos' %}"><i class="fas fa-list" style="width: 20px;"></i> Relação Geral</a></li>
+                <li><a href="{% url 'cadastrar_equipamento' %}"><i class="fas fa-desktop" style="width: 20px;"></i> Cadastrar Equipamento</a></li>
             </ul>
-          </li>
+        </li>
+        
+        <li class="menu-item" onclick="toggleSubmenu('sub-manutencoes')">
+            <a href="javascript:void(0)"><i class="fas fa-tools" style="width: 20px;"></i> Manutenções
+                <i class="fas fa-chevron-down" style="float: right; margin-top: 5px; font-size: 0.8rem;"></i></a>
+            <ul id="sub-manutencoes" class="submenu">
+                <li><a href="{% url 'listar_manutencoes' %}"><i class="fas fa-clipboard-list" style="width: 20px;"></i> Histórico Geral</a></li>
+                
+                <li><a href="{% url 'cadastrar_manutencao' %}?tipo=preventiva"><i class="fas fa-check-circle" style="width: 20px; color:#2dd4bf;"></i> Nova Preventiva</a></li>
+                <li><a href="{% url 'cadastrar_manutencao' %}?tipo=corretiva"><i class="fas fa-wrench" style="width: 20px; color:#fb923c;"></i> Nova Corretiva</a></li>
+            </ul>
+        </li>
 
           <li class="menu-item" onclick="toggleSubmenu('sub-acessorios')">
             <a href="javascript:void(0)"

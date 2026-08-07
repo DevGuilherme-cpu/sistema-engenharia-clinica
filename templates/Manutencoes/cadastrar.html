@@ -104,10 +104,10 @@
         <div class="input-wrap">
           <i class="fas fa-tag input-icon"></i>
           <select name="tipo_manutencao" required class="form-select">
-            <option value="Preventiva">Preventiva</option>
-            <option value="Corretiva">Corretiva</option>
-            <option value="Inspeção">Inspeção</option>
-          </select>
+            <option value="Preventiva" {% if tipo_url == 'preventiva' %}selected{% endif %}>Preventiva</option>
+            <option value="Corretiva" {% if tipo_url == 'corretiva' %}selected{% endif %}>Corretiva</option>
+            <option value="Inspeção" {% if tipo_url == 'inspecao' %}selected{% endif %}>Inspeção</option>
+        </select>
         </div>
       </div>
     </div>
