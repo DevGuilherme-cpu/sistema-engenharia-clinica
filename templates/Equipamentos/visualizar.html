@@ -1010,8 +1010,7 @@
                         border: 1px solid rgba(34, 197, 94, 0.15);
                       "
                     >
-                      <i class="fas fa-check"></i> {{
-                      m.status|default:"Concluída" }}
+                      <i class="fas fa-check"></i> {% if m.status %}{{ m.status }}{% else %}Concluída{% endif %}
                     </span>
                   </div>
                   <span
@@ -1023,8 +1022,7 @@
                       gap: 4px;
                     "
                   >
-                    <i class="far fa-calendar-alt"></i> {{
-                    m.data_execucao|date:"d/m/Y" }}
+                    <i class="far fa-calendar-alt"></i> {{ m.data_execucao|date:'d/m/Y' }}
                   </span>
                 </div>
 
@@ -1066,8 +1064,7 @@
                       gap: 5px;
                     "
                   >
-                    <i class="fas fa-user"></i> {{ m.tecnico|default:"Técnico
-                    Local" }}
+                    <i class="fas fa-user"></i> {% if m.tecnico %}{{ m.tecnico }}{% else %}Técnico Local{% endif %}
                   </span>
                 </div>
               </div>
