@@ -4,7 +4,7 @@ from .models import Manutencao
 class ManutencaoForm(forms.ModelForm):
     class Meta:
         model = Manutencao
-        fields = ['equipamento', 'tipo', 'data_execucao', 'tecnico_responsavel', 'custo', 'defeito_informado', 'solucao_aplicada']
+        fields = '__all__'
         
         widgets = {
             'data_execucao': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),

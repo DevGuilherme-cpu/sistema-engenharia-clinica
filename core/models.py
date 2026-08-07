@@ -85,9 +85,14 @@ class Manutencao(models.Model):
 
     equipamento = models.ForeignKey(Equipamento, on_delete=models.CASCADE, related_name='manutencoes')
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    tipo_manutencao = models.CharField(max_length=50)
     data_execucao = models.DateField()
-    tecnico_responsavel = models.CharField(max_length=100)
+    tecnico = models.CharField(max_length=100)
+    status = models.CharField(max_length=50, default='Concluída')
+    titulo = models.CharField(max_length=200, null=True, blank=True)
+    descricao = models.CharField(null=True, blank=True)
     custo = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    data_registro = models.DateTimeField(auto_now_add=True)
     
     defeito_informado = models.TextField(blank=True, null=True)
     diagnostico = models.TextField(blank=True, null=True)
@@ -98,7 +103,7 @@ class Manutencao(models.Model):
     proxima_preventiva = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.get_tipo_display()} - {self.equipamento.descricao}"
+        return f"{self.tipo_manutencao} - {self.equipamento.patrimonio}"
     
 # Tabela de Oficina externa
 class OficinaExterna(models.Model):
