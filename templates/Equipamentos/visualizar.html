@@ -1,0 +1,1299 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+  rel="stylesheet"
+/>
+
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui"] },
+        colors: { surface: "#161d2e" },
+        keyframes: {
+          fadeInUp: {
+            "0%": { opacity: "0", transform: "translateY(18px)" },
+            "100%": { opacity: "1", transform: "translateY(0)" },
+          },
+          fadeIn: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
+          pulseDot: {
+            "0%,100%": { opacity: "1", transform: "scale(1)" },
+            "50%": { opacity: ".5", transform: "scale(0.85)" },
+          },
+          scanLine: { "0%": { top: "0%" }, "100%": { top: "100%" } },
+          qrGlow: {
+            "0%,100%": { boxShadow: "0 0 12px rgba(45,212,191,0.15)" },
+            "50%": { boxShadow: "0 0 24px rgba(45,212,191,0.35)" },
+          },
+        },
+        animation: {
+          "fade-in-up": "fadeInUp 0.5s cubic-bezier(.22,1,.36,1) both",
+          "fade-in": "fadeIn 0.35s ease both",
+          "pulse-dot": "pulseDot 2s ease-in-out infinite",
+          "scan-line": "scanLine 2.5s linear infinite",
+          "qr-glow": "qrGlow 3s ease-in-out infinite",
+        },
+      },
+    },
+  };
+</script>
+
+<style>
+  /* ── Classes Base do v0 ── */
+  .card {
+    background: #161d2e;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+  }
+  .spec-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    gap: 12px;
+  }
+  .spec-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .spec-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.32);
+    white-space: nowrap;
+    padding-top: 1px;
+  }
+  .spec-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: #e2e8f0;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  .timeline-line {
+    position: absolute;
+    left: 19px;
+    top: 40px;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(
+      to bottom,
+      rgba(45, 212, 191, 0.25),
+      rgba(255, 255, 255, 0.04) 90%
+    );
+  }
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid;
+    flex-shrink: 0;
+    margin-top: 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tl-preventiva {
+    border-color: #2dd4bf;
+    background: rgba(45, 212, 191, 0.15);
+  }
+  .tl-corretiva {
+    border-color: #fb923c;
+    background: rgba(251, 146, 60, 0.15);
+  }
+  .tl-inspecao {
+    border-color: #818cf8;
+    background: rgba(129, 140, 248, 0.15);
+  }
+
+  .tab-btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: 0.18s;
+    border: 1px solid transparent;
+  }
+  .tab-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .tab-btn.active {
+    background: rgba(45, 212, 191, 0.1);
+    border-color: rgba(45, 212, 191, 0.2);
+    color: #2dd4bf;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #0891b2, #0d9488);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: 0.18s;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3);
+    text-decoration: none;
+  }
+  .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    cursor: pointer;
+    transition: 0.18s;
+    text-decoration: none;
+  }
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.09);
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .device-glow {
+    background: radial-gradient(
+      ellipse at center,
+      rgba(45, 212, 191, 0.08) 0%,
+      transparent 70%
+    );
+  }
+
+  /* Print modal */
+  #print-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9990;
+    background: rgba(9, 13, 24, 0.82);
+    backdrop-filter: blur(12px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  #print-modal.open {
+    display: flex;
+  }
+</style>
+
+<div
+  style="
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    min-height: 100vh;
+  "
+>
+  <header
+    style="
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(9, 13, 24, 0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    "
+  >
+    <nav
+      style="display: flex; align-items: center; gap: 6px; font-size: 12.5px"
+    >
+      <a
+        href="{% url 'dashboard' %}"
+        style="color: rgba(255, 255, 255, 0.38); text-decoration: none"
+        >Início</a
+      >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="rgba(255,255,255,0.2)"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+      <a
+        href="{% url 'equipamentos' %}"
+        style="color: rgba(255, 255, 255, 0.38); text-decoration: none"
+        >Equipamentos</a
+      >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="rgba(255,255,255,0.2)"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
+      <span style="color: #2dd4bf; font-weight: 500"
+        >Ficha Técnica [{{ equipamento.patrimonio }}]</span
+      >
+    </nav>
+
+    <div style="display: flex; align-items: center; gap: 8px">
+      <button
+        onclick="showPrintModal()"
+        class="btn-secondary"
+        style="padding: 7px 13px; font-size: 12.5px"
+      >
+        <i class="fas fa-print"></i> Imprimir Ficha
+      </button>
+      <a href="{% url 'cadastrar_manutencao' %}?equipamento={{ equipamento.id }}" class="btn-primary" style="padding:7px 15px; font-size:12.5px;">
+        <i class="fas fa-plus"></i> Nova Manutenção
+    </a>
+    </div>
+  </header>
+
+  <div
+    style="
+      padding: 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    "
+  >
+    <div class="card animate-fade-in-up" style="padding: 24px 28px">
+      <div
+        style="
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 20px;
+          flex-wrap: wrap;
+        "
+      >
+        <div style="display: flex; align-items: flex-start; gap: 18px">
+          <div
+            style="
+              width: 56px;
+              height: 56px;
+              border-radius: 14px;
+              background: linear-gradient(
+                135deg,
+                rgba(8, 145, 178, 0.2),
+                rgba(13, 148, 136, 0.2)
+              );
+              border: 1px solid rgba(45, 212, 191, 0.18);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
+            "
+          >
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#2dd4bf"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+              <polyline points="7,8 10,11 13,8 16,11" />
+            </svg>
+          </div>
+          <div>
+            <h1
+              style="
+                font-size: 22px;
+                font-weight: 700;
+                color: #f1f5f9;
+                letter-spacing: -0.03em;
+                margin: 0 0 4px;
+              "
+            >
+              {{ equipamento.descricao }}
+            </h1>
+            <p
+              style="
+                font-size: 13.5px;
+                color: rgba(255, 255, 255, 0.42);
+                margin: 0 0 12px;
+              "
+            >
+              {{ equipamento.marca }} {{ equipamento.modelo|default:"" }}
+              &nbsp;·&nbsp; Detalhes do Sistema
+            </p>
+
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+              "
+            >
+              {% if equipamento.status == 'funcionamento' %}
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  padding: 4px 12px;
+                  border-radius: 99px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  background: rgba(34, 197, 94, 0.1);
+                  color: #4ade80;
+                  border: 1px solid rgba(34, 197, 94, 0.2);
+                "
+              >
+                <span
+                  style="
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    background: #4ade80;
+                    display: inline-block;
+                  "
+                  class="animate-pulse-dot"
+                ></span>
+                Em funcionamento
+              </span>
+              {% elif equipamento.status == 'manutencao' %}
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  padding: 4px 12px;
+                  border-radius: 99px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  background: rgba(251, 146, 60, 0.1);
+                  color: #fb923c;
+                  border: 1px solid rgba(251, 146, 60, 0.2);
+                "
+              >
+                <span
+                  style="
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    background: #fb923c;
+                    display: inline-block;
+                  "
+                  class="animate-pulse-dot"
+                ></span>
+                Em manutenção
+              </span>
+              {% elif equipamento.status == 'interditado' %}
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  padding: 4px 12px;
+                  border-radius: 99px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  background: rgba(248, 113, 113, 0.1);
+                  color: #f87171;
+                  border: 1px solid rgba(248, 113, 113, 0.2);
+                "
+              >
+                <span
+                  style="
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    background: #f87171;
+                    display: inline-block;
+                  "
+                ></span>
+                Interditado
+              </span>
+              {% else %}
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  padding: 4px 12px;
+                  border-radius: 99px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  background: rgba(148, 163, 184, 0.1);
+                  color: #94a3b8;
+                  border: 1px solid rgba(148, 163, 184, 0.2);
+                "
+              >
+                <span
+                  style="
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    background: #94a3b8;
+                    display: inline-block;
+                  "
+                ></span>
+                Não localizado
+              </span>
+              {% endif %}
+
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 5px;
+                  padding: 4px 12px;
+                  border-radius: 99px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  background: rgba(99, 102, 241, 0.1);
+                  color: #818cf8;
+                  border: 1px solid rgba(99, 102, 241, 0.2);
+                "
+              >
+                <i class="fas fa-barcode"></i> {{ equipamento.patrimonio }}
+              </span>
+
+              <span
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 5px;
+                  padding: 4px 12px;
+                  border-radius: 99px;
+                  font-size: 12px;
+                  font-weight: 600;
+                  background: rgba(255, 255, 255, 0.05);
+                  color: rgba(255, 255, 255, 0.5);
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                "
+              >
+                <i class="fas fa-map-marker-alt"></i> {{
+                equipamento.setor.nome|default:"Sem Setor" }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap"
+        >
+          <a href="#" class="btn-secondary">
+            <i class="fas fa-pen"></i> Editar
+          </a>
+          <a href="{% url 'equipamentos' %}" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div
+      style="
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 20px;
+        align-items: start;
+      "
+    >
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div
+          class="card animate-fade-in-up"
+          style="
+            padding: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation-delay: 100ms;
+          "
+        >
+          <div style="position: absolute; inset: 0" class="device-glow"></div>
+
+          <div
+            style="
+              width: 90px;
+              height: 90px;
+              border-radius: 20px;
+              background: linear-gradient(
+                145deg,
+                rgba(8, 145, 178, 0.18),
+                rgba(13, 148, 136, 0.12)
+              );
+              border: 1px solid rgba(45, 212, 191, 0.14);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 16px;
+              position: relative;
+            "
+          >
+            <svg
+              width="46"
+              height="46"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="rgba(45,212,191,0.7)"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+              <polyline points="7,8 10,11 13,8 16,11" />
+            </svg>
+            <div
+              style="
+                position: absolute;
+                inset: -4px;
+                border-radius: 24px;
+                border: 1.5px solid rgba(45, 212, 191, 0.12);
+              "
+            ></div>
+            <div
+              style="
+                position: absolute;
+                inset: -9px;
+                border-radius: 28px;
+                border: 1px solid rgba(45, 212, 191, 0.06);
+              "
+            ></div>
+          </div>
+
+          <p
+            style="
+              font-size: 14px;
+              font-weight: 600;
+              color: #e2e8f0;
+              margin: 0 0 2px;
+            "
+          >
+            {{ equipamento.marca }}
+          </p>
+          <p
+            style="font-size: 12px; color: rgba(255, 255, 255, 0.36); margin: 0"
+          >
+            {{ equipamento.modelo }}
+          </p>
+
+          {% if equipamento.observacoes %}
+          <div
+            style="
+              margin-top: 18px;
+              padding: 10px 14px;
+              background: rgba(255, 255, 255, 0.03);
+              border: 1px solid rgba(255, 255, 255, 0.06);
+              border-radius: 10px;
+              text-align: left;
+            "
+          >
+            <span
+              style="
+                font-size: 10.5px;
+                font-weight: 600;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: rgba(255, 255, 255, 0.28);
+              "
+              >Observações do Equipamento</span
+            >
+            <p
+              style="
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.6);
+                margin-top: 6px;
+                line-height: 1.4;
+              "
+            >
+              {{ equipamento.observacoes }}
+            </p>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="card animate-fade-in-up delay-150" style="padding: 20px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 14px;
+            "
+          >
+            <span
+              style="
+                font-size: 12px;
+                font-weight: 600;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                color: rgba(255, 255, 255, 0.3);
+              "
+              >QR Code / Etiqueta</span
+            >
+            <i class="fas fa-qrcode" style="color: rgba(45, 212, 191, 0.5)"></i>
+          </div>
+
+          <div
+            style="display: flex; justify-content: center; margin-bottom: 14px"
+          >
+            <div
+              style="
+                position: relative;
+                display: inline-block;
+                padding: 12px;
+                background: rgba(255, 255, 255, 0.97);
+                border-radius: 10px;
+              "
+              class="animate-qr-glow"
+            >
+              <svg
+                width="110"
+                height="110"
+                viewBox="0 0 110 110"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect x="5" y="5" width="30" height="30" rx="3" fill="#111" />
+                <rect x="9" y="9" width="22" height="22" rx="2" fill="white" />
+                <rect x="13" y="13" width="14" height="14" rx="1" fill="#111" />
+                <rect x="75" y="5" width="30" height="30" rx="3" fill="#111" />
+                <rect x="79" y="9" width="22" height="22" rx="2" fill="white" />
+                <rect x="83" y="13" width="14" height="14" rx="1" fill="#111" />
+                <rect x="5" y="75" width="30" height="30" rx="3" fill="#111" />
+                <rect x="9" y="79" width="22" height="22" rx="2" fill="white" />
+                <rect x="13" y="83" width="14" height="14" rx="1" fill="#111" />
+                <rect x="42" y="5" width="8" height="8" fill="#111" />
+                <rect x="55" y="5" width="8" height="8" fill="#111" />
+                <rect x="64" y="5" width="8" height="8" fill="#111" />
+                <rect x="42" y="14" width="8" height="8" fill="#111" />
+                <rect x="60" y="14" width="8" height="8" fill="#111" />
+                <rect x="42" y="23" width="8" height="8" fill="#111" />
+                <rect x="51" y="23" width="8" height="8" fill="#111" />
+                <rect x="68" y="23" width="8" height="8" fill="#111" />
+                <rect x="5" y="42" width="8" height="8" fill="#111" />
+                <rect x="23" y="42" width="8" height="8" fill="#111" />
+                <rect x="42" y="42" width="8" height="8" fill="#111" />
+                <rect x="55" y="42" width="8" height="8" fill="#111" />
+                <rect x="75" y="42" width="8" height="8" fill="#111" />
+                <rect x="97" y="42" width="8" height="8" fill="#111" />
+                <rect x="14" y="51" width="8" height="8" fill="#111" />
+                <rect x="32" y="51" width="8" height="8" fill="#111" />
+                <rect x="51" y="51" width="8" height="8" fill="#111" />
+                <rect x="64" y="51" width="8" height="8" fill="#111" />
+                <rect x="88" y="51" width="8" height="8" fill="#111" />
+                <rect x="5" y="60" width="8" height="8" fill="#111" />
+                <rect x="23" y="60" width="8" height="8" fill="#111" />
+                <rect x="42" y="60" width="8" height="8" fill="#111" />
+                <rect x="60" y="60" width="8" height="8" fill="#111" />
+                <rect x="75" y="60" width="8" height="8" fill="#111" />
+                <rect x="97" y="60" width="8" height="8" fill="#111" />
+                <rect x="42" y="75" width="8" height="8" fill="#111" />
+                <rect x="55" y="75" width="8" height="8" fill="#111" />
+                <rect x="75" y="75" width="8" height="8" fill="#111" />
+                <rect x="88" y="75" width="8" height="8" fill="#111" />
+                <rect x="42" y="84" width="8" height="8" fill="#111" />
+                <rect x="64" y="84" width="8" height="8" fill="#111" />
+                <rect x="97" y="84" width="8" height="8" fill="#111" />
+                <rect x="42" y="93" width="8" height="8" fill="#111" />
+                <rect x="51" y="93" width="8" height="8" fill="#111" />
+                <rect x="60" y="93" width="8" height="8" fill="#111" />
+                <rect x="75" y="93" width="8" height="8" fill="#111" />
+                <rect
+                  x="5"
+                  y="0"
+                  width="100"
+                  height="2"
+                  fill="rgba(45,212,191,0.6)"
+                  rx="1"
+                  style="animation: scanLine 2.5s linear infinite"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <div
+            style="
+              text-align: center;
+              margin-bottom: 4px;
+              font-size: 12.5px;
+              font-weight: 600;
+              color: #e2e8f0;
+              letter-spacing: 0.06em;
+            "
+          >
+            {{ equipamento.patrimonio }}
+          </div>
+          <div
+            style="
+              text-align: center;
+              margin-bottom: 14px;
+              font-size: 11px;
+              color: rgba(255, 255, 255, 0.3);
+            "
+          >
+            {{ equipamento.descricao }}
+          </div>
+
+          <button
+            onclick="showPrintModal()"
+            class="btn-primary"
+            style="width: 100%; justify-content: center"
+          >
+            <i class="fas fa-print"></i> Imprimir Etiqueta
+          </button>
+        </div>
+
+        <div class="card animate-fade-in-up delay-200" style="padding: 22px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              margin-bottom: 16px;
+            "
+          >
+            <i class="fas fa-info-circle" style="color: #2dd4bf"></i>
+            <span style="font-size: 13px; font-weight: 600; color: #e2e8f0"
+              >Dados Técnicos</span
+            >
+          </div>
+
+          <div>
+            <div class="spec-row">
+              <span class="spec-label">Setor</span>
+              <span
+                class="spec-value"
+                style="display: inline-flex; align-items: center; gap: 5px"
+              >
+                <span
+                  style="
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: #2dd4bf;
+                    display: inline-block;
+                    flex-shrink: 0;
+                  "
+                ></span>
+                {% if equipamento.setor %}{{ equipamento.setor.nome }}{% else %}Sem Setor{% endif %}
+              </span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Patrimônio</span>
+              <span
+                class="spec-value"
+                style="
+                  color: #818cf8;
+                  font-family: monospace;
+                  font-size: 12.5px;
+                "
+                >{{ equipamento.patrimonio }}</span
+              >
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Nº de Série</span>
+              <span
+                class="spec-value"
+                style="
+                  font-family: monospace;
+                  font-size: 12px;
+                  color: rgba(255, 255, 255, 0.6);
+                "
+                >{{ equipamento.numero_serie|default:"N/A" }}</span
+              >
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Marca</span>
+              <span class="spec-value">{{ equipamento.marca }}</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Modelo</span>
+              <span class="spec-value"
+                >{{ equipamento.modelo|default:"N/A" }}</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div class="card animate-fade-in-up delay-150" style="padding: 24px">
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              margin-bottom: 20px;
+              flex-wrap: wrap;
+              gap: 12px;
+            "
+          >
+            <div>
+              <h2
+                style="
+                  font-size: 15px;
+                  font-weight: 700;
+                  color: #f1f5f9;
+                  margin: 0 0 3px;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
+                <i class="fas fa-history" style="color: #2dd4bf"></i> Histórico
+                de Manutenções
+              </h2>
+              <p
+                style="
+                  font-size: 12px;
+                  color: rgba(255, 255, 255, 0.35);
+                  margin: 0;
+                "
+              >
+                Exibindo todas as intervenções para {{ equipamento.patrimonio }}
+              </p>
+            </div>
+
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: 10px;
+                padding: 3px;
+              "
+            >
+              <button
+                class="tab-btn active"
+                onclick="filterTimeline(this, 'all')"
+              >
+                Todos
+              </button>
+              <button
+                class="tab-btn"
+                onclick="filterTimeline(this, 'preventiva')"
+              >
+                Preventivas
+              </button>
+              <button
+                class="tab-btn"
+                onclick="filterTimeline(this, 'corretiva')"
+              >
+                Corretivas
+              </button>
+            </div>
+          </div>
+
+          <div
+            id="timeline-list"
+            style="position: relative; padding-left: 40px"
+          >
+            <div class="timeline-line"></div>
+
+            {% for m in manutencoes %}
+            <div
+              class="tl-entry animate-fade-in-up"
+              data-type="{{ m.tipo_manutencao|lower|default:'preventiva' }}"
+              style="position: relative; margin-bottom: 22px"
+            >
+              <div style="position: absolute; left: -29px; top: 3px">
+                {% if m.tipo_manutencao|lower == 'corretiva' %}
+                <div class="timeline-dot tl-corretiva"></div>
+                {% else %}
+                <div class="timeline-dot tl-preventiva"></div>
+                {% endif %}
+              </div>
+
+              <div
+                style="
+                  padding: 16px;
+                  border-radius: 12px;
+                  background: rgba(255, 255, 255, 0.02);
+                  border: 1px solid rgba(255, 255, 255, 0.05);
+                  transition: 0.18s;
+                "
+                onmouseover="this.style.background='rgba(255,255,255,0.04)';"
+                onmouseout="this.style.background='rgba(255,255,255,0.02)';"
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    gap: 12px;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      flex-wrap: wrap;
+                    "
+                  >
+                    {% if m.tipo_manutencao|lower == 'corretiva' %}
+                    <span
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        padding: 3px 10px;
+                        border-radius: 99px;
+                        background: rgba(251, 146, 60, 0.1);
+                        color: #fb923c;
+                        border: 1px solid rgba(251, 146, 60, 0.18);
+                      "
+                      >Corretiva</span
+                    >
+                    {% else %}
+                    <span
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        padding: 3px 10px;
+                        border-radius: 99px;
+                        background: rgba(45, 212, 191, 0.1);
+                        color: #2dd4bf;
+                        border: 1px solid rgba(45, 212, 191, 0.18);
+                      "
+                      >Preventiva</span
+                    >
+                    {% endif %}
+
+                    <span
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        padding: 3px 10px;
+                        border-radius: 99px;
+                        background: rgba(34, 197, 94, 0.08);
+                        color: #4ade80;
+                        border: 1px solid rgba(34, 197, 94, 0.15);
+                      "
+                    >
+                      <i class="fas fa-check"></i> {{
+                      m.status|default:"Concluída" }}
+                    </span>
+                  </div>
+                  <span
+                    style="
+                      font-size: 11.5px;
+                      color: rgba(255, 255, 255, 0.3);
+                      display: flex;
+                      align-items: center;
+                      gap: 4px;
+                    "
+                  >
+                    <i class="far fa-calendar-alt"></i> {{
+                    m.data_execucao|date:"d/m/Y" }}
+                  </span>
+                </div>
+
+                <p
+                  style="
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #e2e8f0;
+                    margin: 0 0 5px;
+                  "
+                >
+                  {{ m.titulo|default:"Manutenção Registrada" }}
+                </p>
+                <p
+                  style="
+                    font-size: 12.5px;
+                    color: rgba(255, 255, 255, 0.45);
+                    margin: 0 0 10px;
+                    line-height: 1.55;
+                  "
+                >
+                  {{ m.descricao }}
+                </p>
+
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    flex-wrap: wrap;
+                  "
+                >
+                  <span
+                    style="
+                      font-size: 11.5px;
+                      color: rgba(255, 255, 255, 0.35);
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 5px;
+                    "
+                  >
+                    <i class="fas fa-user"></i> {{ m.tecnico|default:"Técnico
+                    Local" }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {% empty %}
+            <div id="tl-empty" style="text-align: center; padding: 40px 20px">
+              <i
+                class="fas fa-file-medical-alt"
+                style="
+                  font-size: 32px;
+                  color: rgba(255, 255, 255, 0.15);
+                  margin-bottom: 12px;
+                "
+              ></i>
+              <p
+                style="
+                  font-size: 13px;
+                  color: rgba(255, 255, 255, 0.3);
+                  margin: 0;
+                "
+              >
+                Nenhuma manutenção registrada para este equipamento.
+              </p>
+            </div>
+            {% endfor %}
+
+            <div
+              id="tl-empty-js"
+              style="display: none; text-align: center; padding: 40px 20px"
+            >
+              <i
+                class="fas fa-filter"
+                style="
+                  font-size: 32px;
+                  color: rgba(255, 255, 255, 0.15);
+                  margin-bottom: 12px;
+                "
+              ></i>
+              <p
+                style="
+                  font-size: 13px;
+                  color: rgba(255, 255, 255, 0.3);
+                  margin: 0;
+                "
+              >
+                Nenhum registro encontrado para este filtro.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  id="print-modal"
+  role="dialog"
+  aria-modal="true"
+  onclick="if(event.target===this) closePrintModal()"
+>
+  <div
+    style="
+      background: #161d2e;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+    "
+  >
+    <button
+      onclick="closePrintModal()"
+      style="
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        border: none;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+      "
+    >
+      <i class="fas fa-times"></i>
+    </button>
+    <div
+      style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px"
+    >
+      <div
+        style="
+          width: 42px;
+          height: 42px;
+          border-radius: 10px;
+          background: rgba(8, 145, 178, 0.15);
+          border: 1px solid rgba(45, 212, 191, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        "
+      >
+        <i class="fas fa-print" style="color: #2dd4bf"></i>
+      </div>
+      <div>
+        <h3
+          style="
+            font-size: 15px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin: 0 0 2px;
+          "
+        >
+          Imprimir Documento
+        </h3>
+        <p style="font-size: 12px; color: rgba(255, 255, 255, 0.38); margin: 0">
+          {{ equipamento.patrimonio }} · {{ equipamento.descricao }}
+        </p>
+      </div>
+    </div>
+    <div
+      style="
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+      "
+    >
+      <label
+        style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 14px;
+          border-radius: 10px;
+          border: 1px solid rgba(45, 212, 191, 0.2);
+          background: rgba(45, 212, 191, 0.06);
+          cursor: pointer;
+        "
+        ><input
+          type="radio"
+          name="print-type"
+          value="label"
+          checked
+          style="accent-color: #2dd4bf; width: 15px; height: 15px"
+        />
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: #e2e8f0">
+            Etiqueta Patrimonial (QR Code)
+          </div>
+          <div style="font-size: 11.5px; color: rgba(255, 255, 255, 0.38)">
+            Formato 60×40mm
+          </div>
+        </div></label
+      >
+      <label
+        style="
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 14px;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.07);
+          background: rgba(255, 255, 255, 0.02);
+          cursor: pointer;
+        "
+        ><input
+          type="radio"
+          name="print-type"
+          value="sheet"
+          style="accent-color: #2dd4bf; width: 15px; height: 15px"
+        />
+        <div>
+          <div style="font-size: 13px; font-weight: 600; color: #e2e8f0">
+            Ficha Técnica Completa
+          </div>
+          <div style="font-size: 11.5px; color: rgba(255, 255, 255, 0.38)">
+            PDF A4 com Histórico
+          </div>
+        </div></label
+      >
+    </div>
+    <div style="display: flex; gap: 10px; justify-content: flex-end">
+      <button onclick="closePrintModal()" class="btn-secondary">
+        Cancelar
+      </button>
+      <button
+        onclick="alert('Função de impressão será conectada ao PDF!')"
+        class="btn-primary"
+      >
+        <i class="fas fa-print"></i> Imprimir
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showPrintModal() {
+    document.getElementById("print-modal").classList.add("open");
+  }
+  function closePrintModal() {
+    document.getElementById("print-modal").classList.remove("open");
+  }
+
+  function filterTimeline(btn, type) {
+    document
+      .querySelectorAll(".tab-btn")
+      .forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    let visible = 0;
+    document.querySelectorAll(".tl-entry").forEach((entry) => {
+      // type da entry vem do banco de dados (ex: 'preventiva' ou 'corretiva')
+      if (type === "all" || entry.dataset.type === type) {
+        entry.style.display = "";
+        visible++;
+      } else {
+        entry.style.display = "none";
+      }
+    });
+
+    const emptyMsg = document.getElementById("tl-empty-js");
+    if (emptyMsg) emptyMsg.style.display = visible === 0 ? "block" : "none";
+  }
+</script>
+{% endblock %}

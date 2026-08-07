@@ -1,4 +1,18 @@
+# Ambientes Virtuais
+.venv/
 venv/
+env/
+
+# Banco de Dados local (Não enviar para a internet!)
+db.sqlite3
+
+# Ficheiros de Cache do Python
 __pycache__/
 *.pyc
+
+# Ficheiros de ambiente (Senhas/Chaves)
 .env
+
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db

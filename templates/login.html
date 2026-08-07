@@ -1,122 +1,352 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClinEng — Engenharia Clinica</title>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login - Engenharia Clínica</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Inter", "system-ui", "sans-serif"] },
+            keyframes: {
+              fadeInUp: {
+                "0%": { opacity: "0", transform: "translateY(20px)" },
+                "100%": { opacity: "1", transform: "translateY(0)" },
+              },
+              fadeIn: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
+              orbFloat: {
+                "0%, 100%": { transform: "translateY(0px) scale(1)" },
+                "50%": { transform: "translateY(-24px) scale(1.04)" },
+              },
+              heartbeat: {
+                "0%": { strokeDashoffset: "1200" },
+                "100%": { strokeDashoffset: "0" },
+              },
+            },
+            animation: {
+              "fade-in-up": "fadeInUp 0.55s cubic-bezier(0.22,1,0.36,1) both",
+              "fade-in": "fadeIn 0.6s ease both",
+              "orb-float": "orbFloat 7s ease-in-out infinite",
+              heartbeat: "heartbeat 3s ease forwards",
+            },
+          },
+        },
+      };
+    </script>
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background: #0a0d14;
+        font-family: "Inter", sans-serif;
+      }
+      .delay-100 {
+        animation-delay: 100ms;
+      }
+      .delay-200 {
+        animation-delay: 200ms;
+      }
+      .delay-300 {
+        animation-delay: 300ms;
+      }
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #343a40;
-        }
+      .bg-grid {
+        background-image: radial-gradient(
+          circle,
+          rgba(99, 140, 255, 0.18) 1px,
+          transparent 1px
+        );
+        background-size: 28px 28px;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.09);
+      }
 
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
+      .input-medical {
+        width: 100%;
+        height: 3rem;
+        padding: 0 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(235, 240, 255, 0.92);
+        outline: none;
+        transition: 0.2s ease;
+      }
+      .input-medical:focus {
+        border-color: rgba(99, 140, 255, 0.55);
+        box-shadow: 0 0 0 3px rgba(99, 140, 255, 0.15);
+      }
 
-        .login-box h2 {
-            color: #333;
-            margin-bottom: 20px;
-        }
+      .btn-primary {
+        width: 100%;
+        height: 3.25rem;
+        border-radius: 0.75rem;
+        color: #fff;
+        background: linear-gradient(135deg, #4f80e8 0%, #3ac8b4 100%);
+        font-weight: 600;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      .btn-primary:hover {
+        filter: brightness(1.1);
+        box-shadow: 0 6px 30px rgba(79, 128, 232, 0.5);
+      }
 
-        .login-box i.fa-heartbeat {
-            font-size: 3rem;
-            color: #ff4757;
-            margin-bottom: 15px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-
-        .btn-login {
-            width: 100%;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 5px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-login:hover {
-            background-color: #0056b3;
-        }
-
-        .erro-msg {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
+      .btn-sso {
+        width: 100%;
+        height: 2.75rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(185, 200, 230, 0.82);
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.625rem;
+      }
+      .error-inner {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        background: rgba(220, 50, 50, 0.14);
+        border: 1px solid rgba(220, 80, 80, 0.3);
+        margin-bottom: 1rem;
+        color: rgba(255, 165, 165, 0.92);
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      .heartbeat-path {
+        stroke-dasharray: 1200;
+        stroke-dashoffset: 1200;
+        animation: heartbeat 3.2s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-    <div class="login-box">
-        <i class="fas fa-heartbeat"></i>
-        <h2>Engenharia Clínica</h2>
+  <body>
+    <main style="min-height: 100vh; display: flex; flex-direction: row">
+      <div
+        id="hero-panel"
+        class="hidden lg:flex flex-col justify-between relative overflow-hidden p-12 xl:p-16"
+        style="
+          flex: 1 1 55%;
+          background: radial-gradient(
+              ellipse 80% 60% at 20% 20%,
+              rgba(79, 128, 232, 0.24) 0%,
+              transparent 60%
+            ),
+            radial-gradient(
+              ellipse 60% 70% at 80% 80%,
+              rgba(58, 200, 180, 0.18) 0%,
+              transparent 55%
+            ),
+            linear-gradient(160deg, #0c1121 0%, #090d18 100%);
+        "
+      >
+        <div class="absolute inset-0 bg-grid opacity-60"></div>
 
-        {% with messages = get_flashed_messages(category_filter=["erro"]) %}
-        {% if messages %}
-        {% for message in messages %}
-        <div class="erro-msg"><i class="fas fa-exclamation-circle"></i> {{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
+        <div
+          class="absolute bottom-48 left-0 right-0 flex items-center justify-center px-12"
+        >
+          <svg
+            viewBox="0 0 520 60"
+            class="w-full max-w-lg"
+            style="opacity: 0.38"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              class="heartbeat-path"
+              d="M0 30 L60 30 L80 30 L95 8 L110 52 L125 8 L140 30 L160 30 L200 30 L210 30 L225 15 L240 45 L255 15 L270 30 L310 30 L400 30 L520 30"
+              stroke="#4f80e8"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
 
-        <form action="{{ url_for('login') }}" method="POST">
-            <div class="input-group">
-                <label>Usuário</label>
-                <input type="text" name="username" placeholder="Digite seu usuário" required autofocus>
+        <div class="relative z-10 animate-fade-in">
+          <h1
+            class="text-4xl xl:text-5xl font-bold leading-tight"
+            style="color: rgba(238, 244, 255, 0.95); margin-top: 20vh"
+          >
+            Engenharia Clínica
+            <span
+              style="
+                background: linear-gradient(135deg, #7ab0ff, #3ac8b4);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+              "
+              >Inteligente</span
+            >
+          </h1>
+          <p
+            class="mt-4 text-base"
+            style="color: rgba(130, 145, 175, 0.85); max-width: 22rem"
+          >
+            Plataforma centralizada para gestão de equipamentos médicos,
+            manutenção preditiva e conformidade regulatória.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="relative overflow-hidden w-full lg:w-auto"
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1.5rem;
+          flex: 1 1 45%;
+          background: linear-gradient(160deg, #0e1524 0%, #090d18 100%);
+        "
+      >
+        <div
+          class="glass-card relative w-full max-w-md rounded-2xl p-8 sm:p-10 animate-fade-in-up"
+        >
+          <header class="mb-8">
+            <h2
+              class="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-1"
+            >
+              Bem-vindo de volta
+            </h2>
+            <p class="text-sm" style="color: rgba(120, 135, 168, 0.85)">
+              Acesse sua conta para continuar
+            </p>
+          </header>
+
+          <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %} {% if form.errors %}
+            <div class="error-inner">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <p>Usuário ou senha incorretos.</p>
             </div>
-            <div class="input-group">
-                <label>Senha</label>
-                <input type="password" name="senha" placeholder="Digite sua senha" required>
-            </div>
-            <button type="submit" class="btn-login"><i class="fas fa-sign-in-alt"></i> Entrar no Sistema</button>
-        </form>
-    </div>
-</body>
+            {% endif %}
 
+            <div class="flex flex-col gap-2 mb-5">
+              <label
+                class="text-xs font-semibold uppercase tracking-widest"
+                style="color: rgba(100, 135, 210, 0.85)"
+                >Usuário</label
+              >
+              <input
+                name="username"
+                class="input-medical"
+                type="text"
+                placeholder="Nome de utilizador"
+                required
+              />
+            </div>
+
+            <div class="flex flex-col gap-2 mb-6">
+              <label
+                class="text-xs font-semibold uppercase tracking-widest"
+                style="color: rgba(100, 135, 210, 0.85)"
+                >Senha</label
+              >
+              <input
+                name="password"
+                class="input-medical"
+                type="password"
+                placeholder="••••••••••••"
+                required
+              />
+            </div>
+
+            <button type="submit" class="btn-primary mb-6">
+              <span>Entrar no Sistema</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </form>
+
+          <div class="flex items-center gap-4 my-6">
+            <div
+              class="flex-1 h-px"
+              style="background: rgba(255, 255, 255, 0.07)"
+            ></div>
+            <span
+              class="text-[11px] font-medium uppercase tracking-wider"
+              style="color: rgba(75, 88, 118, 0.85)"
+              >ou acesse via SSO</span
+            >
+            <div
+              class="flex-1 h-px"
+              style="background: rgba(255, 255, 255, 0.07)"
+            ></div>
+          </div>
+
+          <button type="button" class="btn-sso">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#3ac8b4"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <polyline points="9 12 11 14 15 10" />
+            </svg>
+            Entrar com SSO Institucional
+          </button>
+        </div>
+      </div>
+    </main>
+  </body>
 </html>

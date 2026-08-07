@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(255,255,255,0.38); }
+  .field-label span.req { color: #f87171; margin-left: 2px; }
+
+  .form-input, .form-select {
+    width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px; color: #e2e8f0; font-size: 13.5px; font-family: inherit; outline: none; transition: 0.2s;
+  }
+  .form-input { padding: 10px 14px 10px 40px; }
+  .form-input.no-icon { padding: 10px 14px; }
+  .form-input:focus, .form-select:focus { border-color: rgba(45,212,191,0.5); box-shadow: 0 0 0 3px rgba(45,212,191,0.1); background: rgba(255,255,255,0.06); }
+  
+  .input-wrap { position: relative; }
+  .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.25); pointer-events: none; transition: 0.2s; }
+  .input-wrap:focus-within .input-icon { color: rgba(45,212,191,0.7); }
+
+  .form-select { appearance: none; padding: 10px 36px 10px 40px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.28)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+  .form-select option { background: #1e2a3a; color: #e2e8f0; }
+
+  .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%); color: #fff; transition: 0.18s; }
+  .btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); box-shadow: 0 4px 22px rgba(20,184,166,0.38); }
+  .btn-ghost { display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 500; cursor: pointer; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); transition: 0.18s; text-decoration: none; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.8); }
+
+  .section-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0 2px; }
+  .section-divider-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
+  .section-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+</style>
+
+<div style="flex:1; overflow-y:auto; padding: 32px 36px 60px;">
+
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:28px;">
+    <div>
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
+        <a href="{% url 'equipamentos' %}" style="font-size:12.5px; color:rgba(255,255,255,0.35); text-decoration:none;">Equipamentos</a>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <span style="font-size:12.5px; color:#2dd4bf; font-weight:500;">Editar [{{ equipamento.patrimonio }}]</span>
+      </div>
+      <h1 style="font-size:22px; font-weight:700; color:#e2e8f0; letter-spacing:-0.02em; margin:0 0 5px;">Editar Equipamento</h1>
+      <p style="font-size:13.5px; color:rgba(255,255,255,0.38); margin:0;">Atualize os dados de {{ equipamento.descricao }}.</p>
+    </div>
+  </div>
+
+  <form method="POST" action="{% url 'editar_equipamento' equipamento.id %}" style="background: #161d2e; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 32px; max-width: 900px; box-shadow: 0 8px 32px rgba(0,0,0,0.28);">
+    {% csrf_token %}
+
+    <div class="section-divider">
+      <div style="width:26px; height:26px; border-radius:7px; background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.2); display:flex; align-items:center; justify-content:center;">
+        <i class="fas fa-info" style="color:#38bdf8; font-size:12px;"></i>
+      </div>
+      <span class="section-divider-label">Identificação</span>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:20px;">
+      <div class="field-group">
+        <label class="field-label">Patrimônio <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-barcode input-icon"></i>
+          <input name="patrimonio" type="text" class="form-input" required value="{{ equipamento.patrimonio }}"/>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Número de Série <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-hashtag input-icon"></i>
+          <input name="numero_serie" type="text" class="form-input" required value="{{ equipamento.numero_serie|default:'' }}"/>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;">
+      <div class="field-group">
+        <label class="field-label">Descrição / Nome do Equipamento <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-desktop input-icon"></i>
+          <input name="descricao" type="text" class="form-input" required value="{{ equipamento.descricao }}"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider" style="margin-top:30px;">
+      <div style="width:26px; height:26px; border-radius:7px; background: rgba(20,184,166,0.12); border: 1px solid rgba(20,184,166,0.2); display:flex; align-items:center; justify-content:center;">
+        <i class="fas fa-map-marker-alt" style="color:#2dd4bf; font-size:12px;"></i>
+      </div>
+      <span class="section-divider-label">Localização &amp; Classificação</span>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:20px;">
+      <div class="field-group">
+        <label class="field-label">Setor <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-building input-icon"></i>
+          <select name="setor" class="form-select" required>
+            <option value="">Selecione o setor...</option>
+            {% for setor in setores %}
+                <option value="{{ setor.id }}" {% if equipamento.setor.id == setor.id %}selected{% endif %}>{{ setor.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Status <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-heartbeat input-icon"></i>
+          <select name="status" class="form-select" required>
+            <option value="funcionamento" {% if equipamento.status == 'funcionamento' %}selected{% endif %}>Em funcionamento</option>
+            <option value="manutencao" {% if equipamento.status == 'manutencao' %}selected{% endif %}>Em manutenção</option>
+            <option value="interditado" {% if equipamento.status == 'interditado' %}selected{% endif %}>Interditado</option>
+            <option value="nao_localizado" {% if equipamento.status == 'nao_localizado' %}selected{% endif %}>Não localizado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider" style="margin-top:30px;">
+      <div style="width:26px; height:26px; border-radius:7px; background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.22); display:flex; align-items:center; justify-content:center;">
+        <i class="fas fa-industry" style="color:#818cf8; font-size:12px;"></i>
+      </div>
+      <span class="section-divider-label">Fabricante</span>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:20px;">
+      <div class="field-group">
+        <label class="field-label">Marca <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-tag input-icon"></i>
+          <input name="marca" type="text" class="form-input" required value="{{ equipamento.marca }}"/>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Modelo <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-cube input-icon"></i>
+          <input name="modelo" type="text" class="form-input" required value="{{ equipamento.modelo|default:'' }}"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider" style="margin-top:30px;">
+      <div style="width:26px; height:26px; border-radius:7px; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.18); display:flex; align-items:center; justify-content:center;">
+        <i class="fas fa-align-left" style="color:#fbbf24; font-size:12px;"></i>
+      </div>
+      <span class="section-divider-label">Observações</span>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div class="field-group">
+        <textarea name="observacoes" class="form-input no-icon" style="min-height:90px; resize:vertical; padding:10px 14px;">{{ equipamento.observacoes|default:'' }}</textarea>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; padding-top:24px; margin-top:24px; border-top: 1px solid rgba(255,255,255,0.05);">
+      <a href="{% url 'visualizar_equipamento' equipamento.id %}" class="btn-ghost">Cancelar</a>
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-save"></i> Salvar Alterações
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
