@@ -1267,33 +1267,107 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script>
-  function showPrintModal() {
-    document.getElementById("print-modal").classList.add("open");
+  function showPrintModal() { 
+    document.getElementById('print-modal').classList.add('open'); 
   }
-  function closePrintModal() {
-    document.getElementById("print-modal").classList.remove("open");
+  
+  function closePrintModal() { 
+    document.getElementById('print-modal').classList.remove('open'); 
   }
 
+  function handlePrint() {
+    closePrintModal();
+    
+    var printType = document.querySelector('input[name="print-type"]:checked').value;
+    
+    if (printType === 'label') {
+        imprimirEtiqueta();
+    } else {
+        alert('Função de PDF Completo será conectada em breve!');
+    }
+  }
+
+  function imprimirEtiqueta() {
+    const urlDaFicha = window.location.href;
+    
+    const logoUrl = "{% static 'img/palmas.jpg' %}";
+    
+    const patrimonio = "{{ equipamento.patrimonio }}";
+    
+    const printWin = window.open('', '', 'width=400,height=400');
+    
+    printWin.document.write(`
+        <html>
+            <head>
+                <title>Etiqueta Patrimonial - ${patrimonio}</title>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+                <style>
+                    /* Tamanho e formatação para impressoras térmicas (ex: Zebra) ou A4 */
+                    body { 
+                        margin: 0; padding: 10px; font-family: Arial, sans-serif; 
+                        text-align: center; width: 60mm; /* Largura da etiqueta */
+                        display: flex; flex-direction: column; align-items: center; 
+                        justify-content: center; background: white;
+                    }
+                    img.logo { max-width: 90%; height: auto; max-height: 25px; object-fit: contain; margin-bottom: 8px; }
+                    .info { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #000; }
+                    #qr-code { display: flex; justify-content: center; margin: 5px 0; }
+                    #qr-code img { width: 70px; height: 70px; } /* Tamanho do QR */
+                    .phone { font-size: 10px; font-weight: bold; margin-top: 8px; color: #000; }
+                </style>
+            </head>
+            <body>
+                <img src="${logoUrl}" class="logo" alt="HGP Logo">
+                
+                <div class="info">PAT: ${patrimonio}</div>
+                
+                <div id="qr-code"></div>
+                
+                <div class="phone">(63) 33027-4702</div>
+                
+                <script>
+                    // Gera o QR Code de verdade!
+                    new QRCode(document.getElementById("qr-code"), {
+                        text: "${urlDaFicha}",
+                        width: 70,
+                        height: 70,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                    
+                    // Espera meio segundo para a imagem carregar e chama a impressora!
+                    setTimeout(() => {
+                        window.print();
+                        window.close();
+                    }, 500);
+                <\/script>
+            </body>
+        </html>
+    `);
+    printWin.document.close();
+  }
+
+  // Filtro da Timeline (Mantemos intacto)
   function filterTimeline(btn, type) {
-    document
-      .querySelectorAll(".tab-btn")
-      .forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
     let visible = 0;
-    document.querySelectorAll(".tl-entry").forEach((entry) => {
-      // type da entry vem do banco de dados (ex: 'preventiva' ou 'corretiva')
-      if (type === "all" || entry.dataset.type === type) {
-        entry.style.display = "";
+    document.querySelectorAll('.tl-entry').forEach(entry => {
+      if (type === 'all' || entry.dataset.type === type) {
+        entry.style.display = '';
         visible++;
       } else {
-        entry.style.display = "none";
+        entry.style.display = 'none';
       }
     });
 
-    const emptyMsg = document.getElementById("tl-empty-js");
-    if (emptyMsg) emptyMsg.style.display = visible === 0 ? "block" : "none";
+    const emptyMsg = document.getElementById('tl-empty-js');
+    if(emptyMsg) emptyMsg.style.display = visible === 0 ? 'block' : 'none';
   }
 </script>
 {% endblock %}
