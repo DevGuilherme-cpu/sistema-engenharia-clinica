@@ -17,4 +17,8 @@ urlpatterns = [
     
     path('acessorios/', views.listar_acessorios, name='acessorios'),
     path('acessorios/trocar/', views.registrar_troca, name='registrar_troca'),
+
+    path('relatorio', views.relatorio_marcas, name='relatorio_marcas'),
+
+    path('usuario/cadastrar/', views.cadastrar_usuario, name='cadastrar_usuario'),
 ]

@@ -3,6 +3,7 @@ from django.db.models import Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
+from django.contrib.auth.models import User
 from .models import Equipamento, Manutencao, Setor, TrocaAcessorio
 from .forms import ManutencaoForm
 
@@ -164,6 +165,64 @@ def registrar_troca(request):
         'active_page': 'acessorios', 
         'equipamentos': equipamentos
     })
+
+@login_required
+def relatorio_marcas(request):
+    marca_selecionada = request.GET.get('marca', '')
+    
+    marcas_existentes = Equipamento.objects.values_list('marca', flat=True).distinct().order_by('marca')
+    
+    if marca_selecionada:
+        equipamentos = Equipamento.objects.filter(marca=marca_selecionada)
+    else:
+        equipamentos = Equipamento.objects.all()
+        
+    total = equipamentos.count()
+    em_funcionamento = equipamentos.filter(status='funcionamento').count()
+    em_manutencao = equipamentos.filter(status='manutencao').count()
+
+    contexto = {
+        'active_page': 'relatorios',
+        'marcas': marcas_existentes,
+        'marca_selecionada': marca_selecionada,
+        'equipamentos': equipamentos,
+        'total': total,
+        'em_funcionamento': em_funcionamento,
+        'em_manutencao': em_manutencao,
+    }
+    return render(request, 'Relatorios/relatorio_marcas.html', contexto)
+
+@login_required
+def cadastrar_usuario(request):
+    if not (request.user.is_superuser or request.user.is_staff):
+        return redirect('dashboard')
+
+    mensagem = None
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        nome = request.POST.get('first_name')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        eh_admin = request.POST.get('is_staff') == 'on'
+
+        if User.objects.filter(username=username).exists():
+            mensagem = "Erro: Este nome de usuário já está em uso!"
+        else:
+            novo_user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=nome
+            )
+            if eh_admin:
+                novo_user.is_staff = True
+                novo_user.is_superuser = True
+            novo_user.save()
+            return redirect('dashboard')
+
+    return render(request, 'Usuarios/cadastrar.html', {'active_page': 'admin', 'mensagem': mensagem})
+
 
 def sair(request):
     logout(request)

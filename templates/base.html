@@ -256,11 +256,7 @@
             </ul>
           </li>
 
-          <li>
-            <a href="#"
-              ><i class="fas fa-file-pdf" style="width: 20px"></i> Relatórios</a
-            >
-          </li>
+          <li><a href="{% url 'relatorio_marcas' %}"><i class="fas fa-file-pdf" style="width: 20px;"></i> Relatórios</a></li>
 
           {% if user.is_superuser or user.is_staff %}
           <li class="menu-item" onclick="toggleSubmenu('sub-admin')">
@@ -273,12 +269,7 @@
               ></i
             ></a>
             <ul id="sub-admin" class="submenu">
-              <li>
-                <a href="#"
-                  ><i class="fas fa-user-plus" style="width: 20px"></i> Novo
-                  Usuário</a
-                >
-              </li>
+              <li><a href="{% url 'cadastrar_usuario' %}"><i class="fas fa-user-plus" style="width: 20px;"></i> Novo Usuário</a></li>
             </ul>
           </li>
           {% endif %}
