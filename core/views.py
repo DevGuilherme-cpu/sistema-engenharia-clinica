@@ -31,8 +31,11 @@ def dashboard(request):
 
 @login_required
 def listar_equipamentos(request):
-    equipamentos = Equipamento.objects.all()
-    return render(request, 'Equipamentos/equipamentos.html', {'active_page': 'equipamentos', 'equipamentos': equipamentos})
+    equipamentos = Equipamento.objects.select_related('setor').all()
+    return render(request, 'Equipamentos/equipamentos.html', 
+                  {'active_page': 'equipamentos', 
+                   'equipamentos': equipamentos
+                   })
 
 @login_required
 def cadastrar_equipamento(request):
@@ -94,7 +97,7 @@ def editar_equipamento(request, id):
 
 @login_required
 def listar_manutencoes(request):
-    manutencoes = Manutencao.objects.all().order_by('-data_execucao')
+    manutencoes = Manutencao.objects.select_related('equipamento').all().order_by('-data_execucao')
     return render(request, 'Manutencoes/manutencoes.html', {'active_page': 'manutencoes', 'manutencoes': manutencoes})
 
 @login_required
@@ -134,7 +137,7 @@ def cadastrar_manutencao(request):
 
 @login_required
 def listar_acessorios(request):
-    trocas = TrocaAcessorio.objects.all().order_by('-data_troca')
+    trocas = TrocaAcessorio.objects.select_related('equipamento').all().order_by('-data_troca')
     return render(request, 'Acessorios/acessorios.html', {
         'active_page': 'acessorios', 
         'trocas': trocas
@@ -173,9 +176,9 @@ def relatorio_marcas(request):
     marcas_existentes = Equipamento.objects.values_list('marca', flat=True).distinct().order_by('marca')
     
     if marca_selecionada:
-        equipamentos = Equipamento.objects.filter(marca=marca_selecionada)
+        equipamentos = Equipamento.objects.select_related('setor').filter(marca=marca_selecionada)
     else:
-        equipamentos = Equipamento.objects.all()
+        equipamentos = Equipamento.objects.select_related('setor').all()
         
     total = equipamentos.count()
     em_funcionamento = equipamentos.filter(status='funcionamento').count()
