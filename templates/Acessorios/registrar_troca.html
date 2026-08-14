@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div style="flex:1; overflow-y:auto; padding: 32px 36px 60px;">
+
+  <div style="margin-bottom:28px;">
+    <a href="{% url 'acessorios' %}" style="color:#64748b; text-decoration:none; font-size:13px; display:inline-flex; align-items:center; gap:6px; margin-bottom:12px;">
+      <i class="fas fa-arrow-left"></i> Voltar ao Histórico
+    </a>
+    <h1 style="font-size:22px; font-weight:700; color:#e2e8f0; margin:0 0 5px;">Registrar Troca de Acessório</h1>
+    <p style="font-size:13.5px; color:rgba(255,255,255,0.38); margin:0;">Informe os dados da substituição realizada no equipamento.</p>
+  </div>
+
+  <div style="background: #161d2e; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 28px; max-width: 700px; box-shadow: 0 8px 32px rgba(0,0,0,0.28);">
+    
+    <form method="POST" action="{% url 'registrar_troca' %}">
+      {% csrf_token %}
+
+      <div style="margin-bottom: 20px;">
+        <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Equipamento *</label>
+        <select name="equipamento" required style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
+          <option value="" style="background:#1e293b;">Selecione o equipamento...</option>
+          {% for eq in equipamentos %}
+            <option value="{{ eq.id }}" style="background:#1e293b;">{{ eq.patrimonio }} - {{ eq.descricao }} ({{ eq.marca }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Nome do Acessório *</label>
+        <input type="text" name="nome_acessorio" required placeholder="Ex: Cabo de ECG 5 Vias, Sensor de SpO2 Adulto, Manguito PNI" 
+               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom: 20px;">
+        <div>
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Data da Troca *</label>
+          <input type="date" name="data_troca" required 
+                 style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
+        </div>
+
+        <div>
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Técnico Responsável *</label>
+          <input type="text" name="tecnico" required placeholder="Nome do técnico" 
+                 style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
+        </div>
+      </div>
+
+      <div style="margin-bottom: 28px;">
+        <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Motivo da Substituição *</label>
+        <input type="text" name="motivo" required placeholder="Ex: Fio rompido na extremidade, Mau contato, Desgaste natural, Desaparecimento" 
+               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px;">
+        <a href="{% url 'acessorios' %}" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#dde4f0; padding:10px 20px; border-radius:10px; font-size:13.5px; font-weight:500; text-decoration:none;">Cancelar</a>
+        <button type="submit" style="background:#2dd4bf; border:none; color:#0f172a; padding:10px 24px; border-radius:10px; font-size:13.5px; font-weight:600; cursor:pointer;">Salvar Troca</button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}

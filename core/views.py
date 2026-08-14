@@ -3,7 +3,7 @@ from django.db.models import Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from .models import Equipamento, Manutencao, Setor
+from .models import Equipamento, Manutencao, Setor, TrocaAcessorio
 from .forms import ManutencaoForm
 
 @login_required
@@ -130,6 +130,40 @@ def cadastrar_manutencao(request):
         'equipamento_id_url': equipamento_id_url,
         'tipo_url': tipo_url,
         })
+
+@login_required
+def listar_acessorios(request):
+    trocas = TrocaAcessorio.objects.all().order_by('-data_troca')
+    return render(request, 'Acessorios/acessorios.html', {
+        'active_page': 'acessorios', 
+        'trocas': trocas
+    })
+
+@login_required
+def registrar_troca(request):
+    if request.method == 'POST':
+        equipamento_id = request.POST.get('equipamento')
+        nome_acessorio = request.POST.get('nome_acessorio')
+        data_troca = request.POST.get('data_troca')
+        motivo = request.POST.get('motivo')
+        tecnico = request.POST.get('tecnico')
+
+        equipamento = get_object_or_404(Equipamento, id=equipamento_id)
+        
+        TrocaAcessorio.objects.create(
+            equipamento=equipamento,
+            nome_acessorio=nome_acessorio,
+            data_troca=data_troca,
+            motivo=motivo,
+            tecnico=tecnico
+        )
+        return redirect('acessorios') 
+    
+    equipamentos = Equipamento.objects.all()
+    return render(request, 'Acessorios/registrar_troca.html', {
+        'active_page': 'acessorios', 
+        'equipamentos': equipamentos
+    })
 
 def sair(request):
     logout(request)

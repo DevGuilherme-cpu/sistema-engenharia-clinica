@@ -116,3 +116,14 @@ class OficinaExterna(models.Model):
 
     def __str__(self):
         return f"{self.empresa} - {self.equipamento.descricao}"
+    
+class TrocaAcessorio(models.Model):
+    equipamento = models.ForeignKey(Equipamento, on_delete=models.CASCADE)
+    nome_acessorio = models.CharField(max_length=100)
+    data_troca = models.DateField()
+    motivo = models.CharField(max_length=200)
+    tecnico = models.CharField(max_length=100)
+    data_registro = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Troca: {self.nome_acessorio} - {self.equipamento.patrimonio}"

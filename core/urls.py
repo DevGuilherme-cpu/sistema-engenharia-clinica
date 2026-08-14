@@ -14,4 +14,7 @@ urlpatterns = [
     
     path('manutencoes/', views.listar_manutencoes, name='listar_manutencoes'),
     path('manutencoes/nova/', views.cadastrar_manutencao, name='cadastrar_manutencao'),
+    
+    path('acessorios/', views.listar_acessorios, name='acessorios'),
+    path('acessorios/trocar/', views.registrar_troca, name='registrar_troca'),
 ]
