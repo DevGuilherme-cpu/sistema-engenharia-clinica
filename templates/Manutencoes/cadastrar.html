@@ -3,197 +3,225 @@
 
 {% block content %}
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-
-<script>
-  tailwind.config = {
-    darkMode: 'class',
-    theme: {
-      extend: {
-        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
-        keyframes: {
-          fadeInUp:  { '0%': { opacity: '0', transform: 'translateY(18px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
-          shimmer:   { '0%': { backgroundPosition: '-200% center' }, '100%': { backgroundPosition: '200% center' } },
-        },
-        animation: {
-          'fade-in-up': 'fadeInUp 0.5s cubic-bezier(.22,1,.36,1) both',
-          'shimmer':    'shimmer 2.5s linear infinite',
-        },
-      },
-    },
-  }
-</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
 <style>
-  .field-group { display: flex; flex-direction: column; gap: 6px; }
-  .field-label { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(255,255,255,0.38); }
-  .field-label span.req { color: #f87171; margin-left: 2px; }
+    /* Estilos Premium para o Formulário */
+    .form-container {
+        font-family: "Inter", sans-serif;
+        min-height: calc(100vh - 64px);
+    }
+    
+    .card-glass {
+        background: #161d2e;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
 
-  .form-input, .form-select {
-    width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 10px; color: #e2e8f0; font-size: 13.5px; font-family: inherit; outline: none; transition: 0.2s;
-  }
-  .form-input { padding: 10px 14px 10px 40px; }
-  .form-input.no-icon { padding: 10px 14px; }
-  
-  .form-input:focus, .form-select:focus { 
-    border-color: rgba(45,212,191,0.5); box-shadow: 0 0 0 3px rgba(45,212,191,0.1); background: rgba(255,255,255,0.06); 
-  }
-  
-  .input-wrap { position: relative; }
-  .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.25); pointer-events: none; transition: 0.2s; }
-  .input-wrap:focus-within .input-icon { color: rgba(45,212,191,0.7); }
+    .input-premium {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .input-premium:focus {
+        background: rgba(0, 0, 0, 0.3);
+        border-color: #2dd4bf;
+        box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.1);
+        outline: none;
+    }
 
-  .form-select { appearance: none; padding: 10px 36px 10px 40px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.28)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
-  .form-select option { background: #1e2a3a; color: #e2e8f0; }
-
-  .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; background: linear-gradient(135deg, #0891b2, #0d9488); color: #fff; transition: 0.18s; position: relative; overflow: hidden; }
-  .btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); box-shadow: 0 4px 22px rgba(20,184,166,0.38); }
-  .btn-ghost { display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: 10px; font-size: 13.5px; font-weight: 500; cursor: pointer; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); transition: 0.18s; text-decoration: none; }
-  .btn-ghost:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.18); color: rgba(255,255,255,0.8); }
-
-  .section-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0 2px; }
-  .section-divider-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
-  .section-divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+    /* Estilização bonita para os Checkboxes */
+    .checklist-item {
+        transition: all 0.2s;
+    }
+    .checklist-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: rgba(45, 212, 191, 0.3);
+    }
+    input[type="checkbox"] {
+        accent-color: #2dd4bf; /* Cor da caixinha quando marcada */
+    }
 </style>
 
-<div style="flex:1; overflow-y:auto; padding: 32px 36px 60px;">
-
-  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:28px;" class="animate-fade-in-up">
-    <div>
-      <div style="display:flex; align-items:center; gap:6px; margin-bottom:10px;">
-        <a href="{% url 'equipamentos' %}" style="font-size:12.5px; color:rgba(255,255,255,0.35); text-decoration:none;">Equipamentos</a>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
-        <span style="font-size:12.5px; color:#2dd4bf; font-weight:500;">Registrar Manutenção</span>
-      </div>
-      <h1 style="font-size:22px; font-weight:800; color:#f1f5f9; letter-spacing:-0.02em; margin:0 0 5px;">Registrar Manutenção</h1>
-      <p style="font-size:13.5px; color:rgba(255,255,255,0.38); margin:0;">Adicione um novo laudo ou intervenção ao equipamento.</p>
-    </div>
-  </div>
-
-  <form id="manutencao-form" method="POST" action="{% url 'cadastrar_manutencao' %}" class="animate-fade-in-up" style="animation-delay: 100ms; background: #161d2e; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 32px; max-width: 900px; box-shadow: 0 8px 32px rgba(0,0,0,0.28);">
-    {% csrf_token %}
-
-    <div class="section-divider">
-      <div style="width:26px; height:26px; border-radius:7px; background: rgba(14,165,233,0.12); border: 1px solid rgba(14,165,233,0.2); display:flex; align-items:center; justify-content:center;">
-        <i class="fas fa-wrench" style="color:#38bdf8; font-size:12px;"></i>
-      </div>
-      <span class="section-divider-label">Dados da Intervenção</span>
-      <div class="section-divider-line"></div>
+<div class="form-container bg-[#090d18] w-full text-gray-200 p-5 md:p-8">
+    
+    <!-- Cabeçalho da Página -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-500/10 border border-teal-500/20">
+                <i class="fas fa-clipboard-check text-teal-400"></i>
+            </div>
+            Registrar Manutenção Preventiva
+        </h1>
+        <p class="text-sm text-slate-400 mt-2 ml-13">O status do equipamento será atualizado automaticamente após o registro.</p>
     </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:20px;">
-      
-      <div class="field-group">
-        <label class="field-label">Equipamento Relacionado <span class="req">*</span></label>
-        <div class="input-wrap">
-          <i class="fas fa-desktop input-icon"></i>
-          <select name="equipamento" required class="form-select">
-            <option value="">Selecione o equipamento...</option>
-            {% for eq in equipamentos %}
-              <option value="{{ eq.id }}" {% if equipamento_id_url == eq.id|stringformat:"s" %}selected{% endif %}>
-                [{{ eq.patrimonio }}] {{ eq.descricao }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
+    <!-- Cartão do Formulário -->
+    <div class="card-glass rounded-2xl p-6 md:p-8 max-w-5xl">
+        <!-- Corrigido de url_for para sintaxe Django padrão -->
+        <form action="{% url 'cadastrar_manutencao' %}" method="POST" id="form-preventiva">
+            {% csrf_token %}
+            
+            <div class="space-y-6">
+                <!-- Seção 1: Dados Principais -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase mb-4 border-b border-white/5 pb-2">
+                        <i class="fas fa-desktop mr-2 text-slate-400"></i> Dados da Intervenção
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-400 mb-2">Equipamento Relacionado *</label>
+                            <select name="monitor_id" required class="input-premium w-full rounded-xl px-4 py-3 text-sm appearance-none">
+                              <option value="">-- Selecione o Monitor / Equipamento --</option>
+                              {% for monitor in equipamentos %}
+                              <option value="{{ monitor.id }}">
+                                  Patrimônio: {{ monitor.patrimonio|default:"N/A" }} | S/N: {{ monitor.numero_serie }} - {{ monitor.descricao }} - {{ monitor.marca|default:"Sem Marca" }}
+                              </option>
+                              {% endfor %}
+                          </select>
+                        </div>
 
-      <div class="field-group">
-        <label class="field-label">Tipo de Manutenção <span class="req">*</span></label>
-        <div class="input-wrap">
-          <i class="fas fa-tag input-icon"></i>
-          <select name="tipo_manutencao" required class="form-select">
-            <option value="Preventiva" {% if tipo_url == 'preventiva' %}selected{% endif %}>Preventiva</option>
-            <option value="Corretiva" {% if tipo_url == 'corretiva' %}selected{% endif %}>Corretiva</option>
-            <option value="Inspeção" {% if tipo_url == 'inspecao' %}selected{% endif %}>Inspeção</option>
-        </select>
-        </div>
-      </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-2">Data da Execução *</label>
+                            <input type="date" name="data_preventiva" required class="input-premium w-full rounded-xl px-4 py-3 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-2">Mês de Referência *</label>
+                            <select name="mes" required class="input-premium w-full rounded-xl px-4 py-3 text-sm appearance-none">
+                                <option value="Janeiro">Janeiro</option>
+                                <option value="Fevereiro">Fevereiro</option>
+                                <option value="Março">Março</option>
+                                <option value="Abril">Abril</option>
+                                <option value="Maio">Maio</option>
+                                <option value="Junho">Junho</option>
+                                <option value="Julho">Julho</option>
+                                <option value="Agosto">Agosto</option>
+                                <option value="Setembro">Setembro</option>
+                                <option value="Outubro">Outubro</option>
+                                <option value="Novembro">Novembro</option>
+                                <option value="Dezembro">Dezembro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção 2: CHECKLIST MÁGICO DE ACESSÓRIOS -->
+                <div class="pt-4">
+                    <h3 class="text-xs font-bold text-teal-500 tracking-wider uppercase mb-4 border-b border-white/5 pb-2">
+                        <i class="fas fa-tasks mr-2"></i> Checklist de Acessórios (Inspeção Visual e Funcional)
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <!-- ECG & TEMP -->
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Cabo de ECG (3/5 Vias)" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">Cabo de ECG</span>
+                        </label>
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Sensor de Temperatura 1" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">Sensor TEMP-1</span>
+                        </label>
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Sensor de Temperatura 2" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">Sensor TEMP-2</span>
+                        </label>
+
+                        <!-- SpO2 -->
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Cabo/Sensor SpO2 - Adulto" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">SpO2 Adulto</span>
+                        </label>
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Cabo/Sensor SpO2 - Infantil/Neo" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">SpO2 Infantil</span>
+                        </label>
+
+                        <!-- PAI e Capnografia -->
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Cabo Módulo PAI-1" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">Módulo PAI-1</span>
+                        </label>
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Cabo Módulo PAI-2" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">Módulo PAI-2</span>
+                        </label>
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Módulo Capnografia" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">Capnografia</span>
+                        </label>
+
+                        <!-- PNI -->
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Mangueira/Tubo PNI" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">Cabo/Mangueira PNI</span>
+                        </label>
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Abraçadeira PNI - Adulto" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">Abraçadeira Adulto</span>
+                        </label>
+                        <label class="checklist-item flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer">
+                            <input type="checkbox" value="Abraçadeira PNI - Infantil" class="w-4 h-4 rounded acessorio-cb">
+                            <span class="text-sm text-slate-300 font-medium">Abraçadeira Infantil</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Seção 3: Conclusão do Laudo -->
+                <div class="pt-4 border-t border-white/5">
+                    <div class="grid grid-cols-1 gap-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-2">Técnico Responsável *</label>
+                            <!-- Usando o nome do utilizador logado por padrão se possível -->
+                            <input type="text" name="responsavel" value="{{ user.first_name|default:user.username }}" required class="input-premium w-full md:w-1/2 rounded-xl px-4 py-3 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-2">Observações / Laudo (Opcional)</label>
+                            <textarea name="descricao" id="campo-descricao" rows="4" class="input-premium w-full rounded-xl px-4 py-3 text-sm" placeholder="Digite observações extras. Os acessórios marcados acima serão adicionados aqui automaticamente..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="mt-10 flex flex-col sm:flex-row items-center justify-end gap-4 border-t border-white/5 pt-6">
+                <a href="{% url 'dashboard' %}" class="w-full sm:w-auto px-6 py-3 text-sm font-semibold text-slate-300 hover:text-white transition-colors text-center border border-transparent hover:border-slate-600 rounded-xl">
+                    Cancelar
+                </a>
+                <button type="submit" class="w-full sm:w-auto px-8 py-3 text-sm font-bold text-slate-900 bg-teal-400 hover:bg-teal-300 rounded-xl transition-all shadow-[0_0_15px_rgba(45,212,191,0.3)] hover:shadow-[0_0_25px_rgba(45,212,191,0.5)] transform hover:-translate-y-0.5">
+                    <i class="fas fa-save mr-2"></i> Salvar Preventiva
+                </button>
+            </div>
+        </form>
     </div>
-
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px;">
-      <div class="field-group">
-        <label class="field-label">Data da Execução <span class="req">*</span></label>
-        <div class="input-wrap">
-          <input name="data_execucao" type="date" required class="form-input no-icon" style="color:rgba(255,255,255,0.8); cursor:text;"/>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Técnico Responsável <span class="req">*</span></label>
-        <div class="input-wrap">
-          <i class="fas fa-user input-icon"></i>
-          <input name="tecnico" type="text" required class="form-input" placeholder="ex: Marcos Ferreira" value="{{ user.get_full_name|default:user.username }}"/>
-        </div>
-      </div>
-    </div>
-
-    <div style="margin-top:18px;">
-      <div class="field-group">
-        <label class="field-label">Status da Intervenção <span class="req">*</span></label>
-        <div class="input-wrap">
-          <i class="fas fa-check-circle input-icon"></i>
-          <select name="status" required class="form-select">
-            <option value="Concluída">Concluída</option>
-            <option value="Em andamento">Em andamento</option>
-            <option value="Aguardando peça">Aguardando peça</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="section-divider" style="margin-top:30px;">
-      <div style="width:26px; height:26px; border-radius:7px; background: rgba(20,184,166,0.12); border: 1px solid rgba(20,184,166,0.2); display:flex; align-items:center; justify-content:center;">
-        <i class="fas fa-file-alt" style="color:#2dd4bf; font-size:12px;"></i>
-      </div>
-      <span class="section-divider-label">Laudo Técnico</span>
-      <div class="section-divider-line"></div>
-    </div>
-
-    <div style="margin-top:20px;">
-      <div class="field-group">
-        <label class="field-label">Resumo / Título <span class="req">*</span></label>
-        <div class="input-wrap">
-          <i class="fas fa-heading input-icon"></i>
-          <input name="titulo" type="text" required class="form-input" placeholder="ex: Manutenção Preventiva Semestral"/>
-        </div>
-      </div>
-    </div>
-
-    <div style="margin-top:18px;">
-      <div class="field-group">
-        <label class="field-label">Descrição detalhada <span class="req">*</span></label>
-        <textarea name="descricao" required class="form-input no-icon" style="min-height:120px; resize:vertical; padding:12px 14px;" placeholder="Descreva os testes realizados, peças substituídas ou diagnósticos..."></textarea>
-      </div>
-    </div>
-
-    <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; padding-top:24px; margin-top:24px; border-top: 1px solid rgba(255,255,255,0.05);">
-      <button type="button" class="btn-ghost" onclick="window.history.back();">Cancelar</button>
-      <button type="submit" class="btn-primary" id="btn-save">
-        <i class="fas fa-save"></i> <span id="btn-save-label">Salvar Registro</span>
-      </button>
-    </div>
-  </form>
 </div>
 
-<style>
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-</style>
-
+<!-- O "Cérebro" que junta os acessórios no campo de texto -->
 <script>
-  // Efeito de "Pensando" ao clicar no botão
-  document.getElementById('manutencao-form').addEventListener('submit', function(e) {
-    const btn = document.getElementById('btn-save');
-    const label = document.getElementById('btn-save-label');
-    label.textContent = 'Salvando...';
-    btn.querySelector('i').className = 'fas fa-circle-notch fa-spin';
-  });
-
-  // Preenche a data de hoje automaticamente!
-  document.addEventListener("DOMContentLoaded", function() {
-    var today = new Date().toISOString().split('T')[0];
-    document.querySelector('input[name="data_execucao"]').value = today;
-  });
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById('form-preventiva');
+    const campoDescricao = document.getElementById('campo-descricao');
+    
+    form.addEventListener('submit', function(e) {
+        // Encontra todas as caixinhas que o técnico marcou
+        const caixasMarcadas = document.querySelectorAll('.acessorio-cb:checked');
+        
+        if (caixasMarcadas.length > 0) {
+            let textoAcessorios = "\n\n--- ACESSÓRIOS VERIFICADOS / TROCADOS ---\n";
+            caixasMarcadas.forEach(caixa => {
+                textoAcessorios += `[✓] ${caixa.value}\n`;
+            });
+            
+            // Adiciona a lista bonitinha no final do que o técnico já escreveu
+            if (!campoDescricao.value.includes("ACESSÓRIOS VERIFICADOS")) {
+                campoDescricao.value += textoAcessorios;
+            }
+        }
+    });
+});
 </script>
 {% endblock %}

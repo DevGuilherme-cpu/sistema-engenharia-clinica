@@ -1,67 +1,152 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends 'base.html' %} 
+{% load static %} 
 
 {% block content %}
-<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    /* Estilos dos campos de texto (Glassmorphism) */
+    .input-premium {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    .input-premium:focus {
+        background: rgba(0, 0, 0, 0.3);
+        border-color: #2dd4bf;
+        box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.1);
+        outline: none;
+    }
 
-<div style="flex:1; overflow-y:auto; padding: 32px 36px 60px;">
+    /* A Mágica do Centralizado Perfeito (Não Trava no Mobile) */
+    .page-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100%; /* Adapta-se ao tamanho real do conteúdo */
+        padding: 3rem 1rem; /* Dá espaço para rolar a tela no mobile */
+    }
 
-  <div style="margin-bottom:28px;">
-    <a href="{% url 'acessorios' %}" style="color:#64748b; text-decoration:none; font-size:13px; display:inline-flex; align-items:center; gap:6px; margin-bottom:12px;">
-      <i class="fas fa-arrow-left"></i> Voltar ao Histórico
-    </a>
-    <h1 style="font-size:22px; font-weight:700; color:#e2e8f0; margin:0 0 5px;">Registrar Troca de Acessório</h1>
-    <p style="font-size:13.5px; color:rgba(255,255,255,0.38); margin:0;">Informe os dados da substituição realizada no equipamento.</p>
-  </div>
+    /* Estilização para o texto das categorias dentro do Select */
+    optgroup {
+        font-weight: bold;
+        color: #2dd4bf;
+        background-color: #0f172a;
+    }
+    option {
+        color: #e2e8f0;
+        background-color: #1e293b;
+    }
+</style>
 
-  <div style="background: #161d2e; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 28px; max-width: 700px; box-shadow: 0 8px 32px rgba(0,0,0,0.28);">
+<!-- Container Principal com Scroll Livre -->
+<div class="page-wrapper w-full text-gray-200">
     
-    <form method="POST" action="{% url 'registrar_troca' %}">
-      {% csrf_token %}
+    <!-- O Cartão Centralizado -->
+    <div class="w-full max-w-2xl animate-entry">
+        
+        <!-- Botão de Voltar -->
+        <a href="{% url 'acessorios' %}" class="inline-flex items-center text-sm text-teal-400 hover:text-teal-300 mb-6 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i> Voltar ao Histórico
+        </a>
 
-      <div style="margin-bottom: 20px;">
-        <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Equipamento *</label>
-        <select name="equipamento" required style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
-          <option value="" style="background:#1e293b;">Selecione o equipamento...</option>
-          {% for eq in equipamentos %}
-            <option value="{{ eq.id }}" style="background:#1e293b;">{{ eq.patrimonio }} - {{ eq.descricao }} ({{ eq.marca }})</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div style="margin-bottom: 20px;">
-        <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Nome do Acessório *</label>
-        <input type="text" name="nome_acessorio" required placeholder="Ex: Cabo de ECG 5 Vias, Sensor de SpO2 Adulto, Manguito PNI" 
-               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
-      </div>
-
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom: 20px;">
-        <div>
-          <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Data da Troca *</label>
-          <input type="date" name="data_troca" required 
-                 style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
+        <!-- Título -->
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-white tracking-tight">Registrar Troca de Acessório</h1>
+            <p class="text-sm text-slate-400 mt-1">Informe os dados da substituição realizada no equipamento.</p>
         </div>
 
-        <div>
-          <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Técnico Responsável *</label>
-          <input type="text" name="tecnico" required placeholder="Nome do técnico" 
-                 style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
+        <!-- O Formulário de Fundo Escuro -->
+        <div class="bg-[#161d2e] border border-white/5 rounded-2xl p-6 md:p-8 shadow-2xl">
+            
+            <!-- ATENÇÃO: Confirme se a URL de action é esta mesma no seu projeto -->
+            <form action="{% url 'registrar_troca' %}" method="POST">
+                {% csrf_token %}
+                
+                <div class="space-y-6">
+                    
+                    <!-- 1. EQUIPAMENTO -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Equipamento *</label>
+                        <select name="equipamento_id" required class="input-premium w-full rounded-xl px-4 py-3 text-sm appearance-none">
+                            <option value="">Selecione o equipamento...</option>
+                            {% for equipamento in equipamentos %}
+                            <option value="{{ equipamento.id }}">
+                                {{ equipamento.descricao }} - Patrimônio: {{ equipamento.patrimonio|default:"N/A" }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- 2. NOME DO ACESSÓRIO (AGORA COM SELEÇÃO INTELIGENTE) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Nome do Acessório *</label>
+                        <select name="nome_acessorio" required class="input-premium w-full rounded-xl px-4 py-3 text-sm appearance-none">
+                            <option value="">Selecione o acessório substituído...</option>
+                            
+                            <!-- Optgroup cria divisões visuais no menu de seleção -->
+                            <optgroup label="Monitorização Básica">
+                                <option value="Cabo de ECG (3/5 Vias)">Cabo de ECG (3/5 Vias)</option>
+                                <option value="Sensor de Temperatura 1">Sensor de Temperatura 1</option>
+                                <option value="Sensor de Temperatura 2">Sensor de Temperatura 2</option>
+                            </optgroup>
+                            
+                            <optgroup label="Oximetria (SpO2)">
+                                <option value="Cabo/Sensor SpO2 - Adulto">Cabo/Sensor SpO2 - Adulto</option>
+                                <option value="Cabo/Sensor SpO2 - Infantil/Neo">Cabo/Sensor SpO2 - Infantil/Neo</option>
+                            </optgroup>
+                            
+                            <optgroup label="Módulos Avançados">
+                                <option value="Módulo PAI-1">Módulo PAI-1</option>
+                                <option value="Módulo PAI-2">Módulo PAI-2</option>
+                                <option value="Módulo Capnografia">Módulo Capnografia</option>
+                            </optgroup>
+                            
+                            <optgroup label="Pressão Não Invasiva (PNI)">
+                                <option value="Mangueira/Tubo PNI">Cabo/Mangueira PNI</option>
+                                <option value="Abraçadeira PNI - Adulto">Abraçadeira PNI - Adulto</option>
+                                <option value="Abraçadeira PNI - Infantil">Abraçadeira PNI - Infantil</option>
+                            </optgroup>
+                            
+                            <optgroup label="Outros">
+                                <option value="Bateria Interna">Bateria Interna</option>
+                                <option value="Cabo de Força">Cabo de Força</option>
+                                <option value="Outro (Especificar no motivo)">Outros (Especificar no motivo)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- 3. DATA E TÉCNICO -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Data da Troca *</label>
+                            <input type="date" name="data_troca" required class="input-premium w-full rounded-xl px-4 py-3 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Técnico Responsável *</label>
+                            <!-- Auto-preenche com o utilizador logado -->
+                            <input type="text" name="tecnico" value="{{ user.first_name|default:user.username }}" required class="input-premium w-full rounded-xl px-4 py-3 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- 4. MOTIVO -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Motivo da Substituição *</label>
+                        <input type="text" name="motivo" placeholder="Ex: Fio rompido na extremidade, Mau contato, Desgaste..." required class="input-premium w-full rounded-xl px-4 py-3 text-sm">
+                    </div>
+                </div>
+
+                <!-- Botões -->
+                <div class="mt-8 flex flex-col-reverse sm:flex-row items-center justify-end gap-4">
+                    <a href="{% url 'acessorios' %}" class="w-full sm:w-auto px-6 py-2.5 text-center text-sm font-semibold text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 rounded-xl transition-colors">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-slate-900 bg-teal-400 hover:bg-teal-300 rounded-xl transition-all shadow-[0_0_15px_rgba(45,212,191,0.2)] hover:shadow-[0_0_25px_rgba(45,212,191,0.4)]">
+                        Salvar Troca
+                    </button>
+                </div>
+            </form>
         </div>
-      </div>
-
-      <div style="margin-bottom: 28px;">
-        <label style="display:block; font-size:12.5px; font-weight:600; color:#94a3b8; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.04em;">Motivo da Substituição *</label>
-        <input type="text" name="motivo" required placeholder="Ex: Fio rompido na extremidade, Mau contato, Desgaste natural, Desaparecimento" 
-               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:12px 14px; color:#e2e8f0; font-size:14px; outline:none;">
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; gap:12px; border-top:1px solid rgba(255,255,255,0.05); padding-top:20px;">
-        <a href="{% url 'acessorios' %}" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#dde4f0; padding:10px 20px; border-radius:10px; font-size:13.5px; font-weight:500; text-decoration:none;">Cancelar</a>
-        <button type="submit" style="background:#2dd4bf; border:none; color:#0f172a; padding:10px 24px; border-radius:10px; font-size:13.5px; font-weight:600; cursor:pointer;">Salvar Troca</button>
-      </div>
-
-    </form>
-  </div>
-
+    </div>
 </div>
 {% endblock %}

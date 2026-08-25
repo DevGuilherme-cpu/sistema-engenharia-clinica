@@ -9,23 +9,26 @@ from .forms import ManutencaoForm
 
 @login_required
 def dashboard(request):
-    total = Equipamento.objects.count()
-    em_dia = Equipamento.objects.filter(status='funcionamento').count()
-    manutencao = Equipamento.objects.filter(status='manutencao').count()
-    nao_localizados = Equipamento.objects.filter(status='nao_localizado').count()
-    marcas_db = Equipamento.objects.values('marca').annotate(total=Count('marca')).order_by('-total')
+    total_equipamentos = Equipamento.objects.count()
+    operacionais = Equipamento.objects.filter(status='funcionamento').count()
+    em_manutencao = Equipamento.objects.filter(status='manutencao').count()
     
-    nomes_marcas = [item['marca'] for item in marcas_db]
-    qtd_marcas = [item['total'] for item in marcas_db]
+    status_labels = ['Em Funcionamento', 'Em Manutenção', 'Não Localizados / Outros']
+    status_data = [operacionais, em_manutencao, total_equipamentos - operacionais - em_manutencao]
+
+    top_fabricantes = Equipamento.objects.values('marca').annotate(total=Count('id')).order_by('-total')[:5]
+    fab_labels = [item['marca'] if item['marca'] else 'Sem Marca' for item in top_fabricantes]
+    fab_data = [item['total'] for item in top_fabricantes]
 
     contexto = {
         'active_page': 'dashboard',
-        'total': total,
-        'em_dia': em_dia,
-        'manutencao': manutencao,
-        'nao_localizados': nao_localizados,
-        'nomes_marcas': json.dumps(nomes_marcas),
-        'qtd_marcas': json.dumps(qtd_marcas),
+        'total_equipamentos': total_equipamentos,
+        'operacionais': operacionais,
+        'em_manutencao': em_manutencao,
+        'status_labels': status_labels,
+        'status_data': status_data,
+        'fab_labels': fab_labels,
+        'fab_data': fab_data,
     }
     return render(request, 'index.html', contexto)
 
@@ -225,7 +228,6 @@ def cadastrar_usuario(request):
             return redirect('dashboard')
 
     return render(request, 'Usuarios/cadastrar.html', {'active_page': 'admin', 'mensagem': mensagem})
-
 
 def sair(request):
     logout(request)

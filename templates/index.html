@@ -1,514 +1,232 @@
-{% extends 'base.html' %} {% load static %} {% block content %}
-<script src="https://cdn.tailwindcss.com"></script>
-<link
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-  rel="stylesheet"
-/>
+{% extends 'base.html' %} 
+{% load static %} 
 
-<script>
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        fontFamily: { sans: ["Inter", "ui-sans-serif", "system-ui"] },
-        keyframes: {
-          fadeInUp: {
-            "0%": { opacity: "0", transform: "translateY(18px)" },
-            "100%": { opacity: "1", transform: "translateY(0)" },
-          },
-          fadeIn: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
-          pulse: { "0%,100%": { opacity: "1" }, "50%": { opacity: "0.4" } },
-        },
-        animation: {
-          "fade-in-up": "fadeInUp 0.55s cubic-bezier(.22,1,.36,1) both",
-          "fade-in": "fadeIn 0.4s ease both",
-          "pulse-slow": "pulse 2.5s cubic-bezier(.4,0,.6,1) infinite",
-        },
-      },
-    },
-  };
-</script>
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
 <style>
-  /* ── Estilos da IA adaptados para o bloco ── */
   .dash-container {
     background: #090d18;
     font-family: "Inter", ui-sans-serif, system-ui;
-    -webkit-font-smoothing: antialiased;
     min-height: 100vh;
   }
-  .delay-100 {
-    animation-delay: 100ms;
-  }
-  .delay-200 {
-    animation-delay: 200ms;
-  }
-  .delay-300 {
-    animation-delay: 300ms;
-  }
-  .delay-400 {
-    animation-delay: 400ms;
-  }
-  .input-dash {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.85);
-    border-radius: 0.5rem;
-    outline: none;
-    transition: 0.2s;
-  }
-  .input-dash:focus {
-    border-color: rgba(96, 165, 250, 0.45);
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
-  }
+  
   .card {
     background: #161d2e;
     border-radius: 1rem;
     overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
-  .stat-card {
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-    cursor: default;
-  }
+  
   .stat-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
   }
-  .list-item:hover {
-    background: rgba(255, 255, 255, 0.025);
-  }
-  .list-item:hover .item-action {
-    opacity: 1;
-  }
-  .item-action {
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
+
   .accent-line {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    border-radius: 1rem 1rem 0 0;
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
   }
-  .dot-pulse {
-    animation: dotPulse 2.2s ease-in-out infinite;
+
+  /* --- AS NOVAS TRANSIÇÕES SUAVES (EFEITO CASCATA) --- */
+  @keyframes smoothEntry {
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
-  @keyframes dotPulse {
-    0%,
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.45;
-      transform: scale(0.85);
-    }
+  
+  .animate-entry {
+    animation: smoothEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0; /* Começa invisível até a animação rodar */
   }
-  .btn {
-    transition: filter 0.2s, transform 0.15s;
-    cursor: pointer;
-  }
-  .btn:hover {
-    filter: brightness(1.22);
-  }
-  .btn:active {
-    transform: scale(0.96);
-  }
-  .header-blur {
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-  }
+  
+  /* Tempos diferentes para cada bloco entrar um de cada vez */
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
 </style>
 
 <div class="dash-container flex flex-col w-full text-gray-200">
-  <header
-    class="sticky top-0 z-40 flex items-center justify-between px-5 md:px-8 shrink-0 header-blur"
-    style="
-      height: 64px;
-      background: rgba(10, 14, 28, 0.9);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    "
-  >
+  
+  <!-- CABEÇALHO LIMPO (Sem o segundo botão de sair) -->
+  <header class="sticky top-0 z-40 flex items-center justify-between px-5 md:px-8 py-4 bg-[#0a0e1c] border-b border-white/5">
     <div class="flex items-center gap-3">
-      <div
-        class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-        style="
-          background: linear-gradient(
-            135deg,
-            rgba(59, 130, 246, 0.22),
-            rgba(20, 184, 166, 0.16)
-          );
-          border: 1px solid rgba(59, 130, 246, 0.3);
-        "
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#7dd3fc"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-        </svg>
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-teal-500/10 border border-teal-500/20">
+        <i class="fas fa-heartbeat text-teal-400"></i>
       </div>
       <div>
-        <h1 class="text-sm font-semibold" style="color: #dde4f0">Dashboard</h1>
-        <p class="text-[11px]" style="color: #374667">Visão Geral</p>
+        <h1 class="text-sm font-semibold text-slate-200">Visão Geral</h1>
+        <p class="text-[11px] text-slate-500">Engenharia Clínica HGP</p>
       </div>
     </div>
-
-    <div class="flex items-center gap-2">
-      <button
-        class="btn flex items-center gap-2.5 px-2 py-1.5 rounded-lg"
-        style="
-          background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.07);
-        "
-      >
-        <div
-          class="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0"
-          style="
-            background: linear-gradient(135deg, #2563eb, #0d9488);
-            color: #f0f6ff;
-          "
-        >
-          <i class="fas fa-user"></i>
+    
+    <!-- Perfil Simples -->
+    <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+            <i class="fas fa-user text-slate-400 text-xs"></i>
         </div>
-        <div class="hidden md:block text-left">
-          <p
-            class="text-[12px] font-semibold leading-tight"
-            style="color: #dde4f0"
-          >
-            {{ user.first_name|default:user.username }}
-          </p>
-          <p class="text-[10px] leading-tight" style="color: #374667">Online</p>
-        </div>
-      </button>
+        <span class="text-sm font-medium text-slate-300 hidden sm:block">Olá, {{ user.first_name|default:user.username }}</span>
     </div>
   </header>
 
   <main class="flex-1 px-5 md:px-8 py-6 space-y-6">
-    <div class="flex items-center justify-between animate-fade-in-up">
-      <div>
-        <h2 class="text-xl font-bold tracking-tight" style="color: #e8edf8">
-          Visão Geral do Parque
-        </h2>
-        <p class="text-sm mt-0.5" style="color: #40516e">
-          Dados processados em tempo real
-        </p>
-      </div>
-      <button
-        class="btn flex items-center gap-2 text-xs font-medium px-3.5 py-2 rounded-xl"
-        style="
-          background: linear-gradient(135deg, #2563eb, #0d9488);
-          color: #f0f6ff;
-          box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38);
-        "
-      >
-        <i class="fas fa-download"></i> Exportar Relatório
-      </button>
+    
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 animate-entry">
+        <div>
+            <h2 class="text-2xl font-bold text-white tracking-tight">Dashboard</h2>
+            <p class="text-sm text-slate-400 mt-1">Acompanhamento em tempo real do parque tecnológico.</p>
+        </div>
+        <button class="flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-400 text-slate-900 text-sm font-bold rounded-lg transition-colors shadow-lg shadow-teal-500/20">
+            <i class="fas fa-download"></i> Exportar Dados
+        </button>
     </div>
 
+    <!-- CARTÕES DE ESTATÍSTICAS -->
     <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-      <article
-        class="stat-card card relative p-5 animate-fade-in-up delay-100"
-        style="
-          border: 1px solid rgba(37, 99, 235, 0.22);
-          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22);
-        "
-      >
-        <div
-          class="accent-line"
-          style="
-            background: linear-gradient(
-              90deg,
-              transparent,
-              #3b82f6,
-              transparent
-            );
-          "
-        ></div>
+      <article class="stat-card card relative p-5 animate-entry delay-1">
+        <div class="accent-line bg-blue-500"></div>
         <div class="flex items-start justify-between gap-3">
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-[11px] font-semibold uppercase tracking-widest mb-3"
-              style="color: #40516e"
-            >
-              Total de Equipamentos
-            </p>
-            <p
-              class="text-4xl font-bold tabular-nums leading-none mb-1.5"
-              style="color: #7dd3fc"
-            >
-              {{ total|default:"0" }}
-            </p>
-            <p class="text-[12px]" style="color: #46597a">
-              patrimônios cadastrados
-            </p>
+          <div class="flex-1">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Total de Equipamentos</p>
+            <p class="text-3xl font-bold text-white">{{ total_equipamentos|default:"0" }}</p>
           </div>
-          <div
-            class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style="
-              background: rgba(37, 99, 235, 0.18);
-              border: 1px solid rgba(37, 99, 235, 0.22);
-            "
-          >
-            <i class="fas fa-desktop text-[#7dd3fc]"></i>
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-400">
+            <i class="fas fa-desktop"></i>
           </div>
         </div>
       </article>
 
-      <article
-        class="stat-card card relative p-5 animate-fade-in-up delay-200"
-        style="
-          border: 1px solid rgba(22, 163, 74, 0.22);
-          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22);
-        "
-      >
-        <div
-          class="accent-line"
-          style="
-            background: linear-gradient(
-              90deg,
-              transparent,
-              #22c55e,
-              transparent
-            );
-          "
-        ></div>
+      <article class="stat-card card relative p-5 animate-entry delay-2">
+        <div class="accent-line bg-teal-500"></div>
         <div class="flex items-start justify-between gap-3">
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-[11px] font-semibold uppercase tracking-widest mb-3"
-              style="color: #40516e"
-            >
-              Operacionais / Em Dia
-            </p>
-            <p
-              class="text-4xl font-bold tabular-nums leading-none mb-1.5"
-              style="color: #4ade80"
-            >
-              {{ em_dia|default:"0" }}
-            </p>
-            <p class="text-[12px]" style="color: #46597a">manutenções em dia</p>
+          <div class="flex-1">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Operacionais</p>
+            <p class="text-3xl font-bold text-white">{{ operacionais|default:"0" }}</p>
           </div>
-          <div
-            class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style="
-              background: rgba(22, 163, 74, 0.18);
-              border: 1px solid rgba(22, 163, 74, 0.22);
-            "
-          >
-            <i class="fas fa-check-circle text-[#4ade80]"></i>
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-teal-500/10 text-teal-400">
+            <i class="fas fa-check-circle"></i>
           </div>
         </div>
       </article>
 
-      <article
-        class="stat-card card relative p-5 animate-fade-in-up delay-300"
-        style="
-          border: 1px solid rgba(234, 88, 12, 0.22);
-          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22);
-        "
-      >
-        <div
-          class="accent-line"
-          style="
-            background: linear-gradient(
-              90deg,
-              transparent,
-              #f97316,
-              transparent
-            );
-          "
-        ></div>
+      <article class="stat-card card relative p-5 animate-entry delay-3">
+        <div class="accent-line bg-orange-500"></div>
         <div class="flex items-start justify-between gap-3">
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-[11px] font-semibold uppercase tracking-widest mb-3"
-              style="color: #40516e"
-            >
-              Oficina Externa
-            </p>
-            <p
-              class="text-4xl font-bold tabular-nums leading-none mb-1.5"
-              style="color: #fb923c"
-            >
-              {{ manutencao|default:"0" }}
-            </p>
-            <p class="text-[12px]" style="color: #46597a">
-              unidades em reparo externo
-            </p>
+          <div class="flex-1">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Em Manutenção</p>
+            <p class="text-3xl font-bold text-white">{{ em_manutencao|default:"0" }}</p>
           </div>
-          <div
-            class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style="
-              background: rgba(234, 88, 12, 0.18);
-              border: 1px solid rgba(234, 88, 12, 0.22);
-            "
-          >
-            <i class="fas fa-exclamation-triangle text-[#fb923c]"></i>
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-orange-500/10 text-orange-400">
+            <i class="fas fa-tools"></i>
           </div>
         </div>
       </article>
 
-      <article
-        class="stat-card card relative p-5 animate-fade-in-up delay-400"
-        style="
-          border: 1px solid rgba(100, 116, 139, 0.22);
-          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.22);
-        "
-      >
-        <div
-          class="accent-line"
-          style="
-            background: linear-gradient(
-              90deg,
-              transparent,
-              #94a3b8,
-              transparent
-            );
-          "
-        ></div>
+      <article class="stat-card card relative p-5 animate-entry delay-4">
+        <div class="accent-line bg-slate-500"></div>
         <div class="flex items-start justify-between gap-3">
-          <div class="flex-1 min-w-0">
-            <p
-              class="text-[11px] font-semibold uppercase tracking-widest mb-3"
-              style="color: #40516e"
-            >
-              Não Localizados
-            </p>
-            <p
-              class="text-4xl font-bold tabular-nums leading-none mb-1.5"
-              style="color: #94a3b8"
-            >
-              {{ nao_localizados|default:"0" }}
-            </p>
-            <p class="text-[12px]" style="color: #46597a">
-              pendentes de rastreamento
-            </p>
+          <div class="flex-1">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Não Localizados</p>
+            <p id="qtd-nao-localizados" class="text-3xl font-bold text-white">0</p>
           </div>
-          <div
-            class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style="
-              background: rgba(100, 116, 139, 0.18);
-              border: 1px solid rgba(100, 116, 139, 0.22);
-            "
-          >
-            <i class="fas fa-question-circle text-[#94a3b8]"></i>
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-500/10 text-slate-400">
+            <i class="fas fa-question-circle"></i>
           </div>
         </div>
       </article>
     </section>
 
-    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <article
-        class="card flex flex-col animate-fade-in-up delay-300"
-        style="
-          border: 1px solid rgba(37, 99, 235, 0.16);
-          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-        "
-      >
-        <div
-          class="flex items-center justify-between px-5 py-4 shrink-0"
-          style="border-bottom: 1px solid rgba(255, 255, 255, 0.06)"
-        >
-          <div class="flex items-center gap-2.5">
-            <div
-              class="w-8 h-8 rounded-lg flex items-center justify-center"
-              style="
-                background: rgba(37, 99, 235, 0.16);
-                border: 1px solid rgba(37, 99, 235, 0.22);
-              "
-            >
-              <i class="fas fa-chart-pie text-[#60a5fa]"></i>
-            </div>
-            <div>
-              <h2 class="text-sm font-semibold" style="color: #dde4f0">
-                Status Geral
-              </h2>
-              <p class="text-[11px]" style="color: #46597a">
-                Distribuição atual do parque
-              </p>
-            </div>
-          </div>
+    <!-- GRÁFICOS PROFISSIONAIS -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      
+      <article class="card flex flex-col p-1 animate-entry delay-5">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <h2 class="text-sm font-semibold text-white">Status do Sistema</h2>
         </div>
-
         <div class="flex-1 p-5">
-          <div
-            style="
-              position: relative;
-              height: 300px;
-              width: 100%;
-              display: flex;
-              justify-content: center;
-            "
-          >
-            <canvas
-              id="graficoStatus"
-              data-completos="{{ em_dia|default:'0' }}"
-              data-pendentes="0"
-              data-manutencao="{{ manutencao|default:'0' }}"
-              data-desaparecidos="{{ nao_localizados|default:'0' }}"
-            >
-            </canvas>
+          <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="graficoStatus"></canvas>
           </div>
         </div>
       </article>
 
-      <article
-        class="card flex flex-col animate-fade-in-up delay-400"
-        style="
-          border: 1px solid rgba(20, 184, 166, 0.16);
-          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-        "
-      >
-        <div
-          class="flex items-center justify-between px-5 py-4 shrink-0"
-          style="border-bottom: 1px solid rgba(255, 255, 255, 0.06)"
-        >
-          <div class="flex items-center gap-2.5">
-            <div
-              class="w-8 h-8 rounded-lg flex items-center justify-center"
-              style="
-                background: rgba(20, 184, 166, 0.16);
-                border: 1px solid rgba(20, 184, 166, 0.22);
-              "
-            >
-              <i class="fas fa-chart-bar text-[#2dd4bf]"></i>
-            </div>
-            <div>
-              <h2 class="text-sm font-semibold" style="color: #dde4f0">
-                Equipamentos por Fabricante
-              </h2>
-              <p class="text-[11px]" style="color: #46597a">
-                Ranking do parque tecnológico
-              </p>
-            </div>
-          </div>
+      <article class="card flex flex-col p-1 animate-entry delay-5">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <h2 class="text-sm font-semibold text-white">Top 5 Fabricantes</h2>
         </div>
-
         <div class="flex-1 p-5">
-          <div style="position: relative; height: 300px; width: 100%">
-            <canvas
-              id="graficoMarcas"
-              data-nomes='{{ nomes_marcas|default:"[]"|safe }}'
-              data-qtds='{{ qtd_marcas|default:"[]"|safe }}'
-            >
-            </canvas>
+          <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="graficoMarcas"></canvas>
           </div>
         </div>
       </article>
+
     </section>
   </main>
 </div>
 
+<!-- Importação do Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'js/scripts.js' %}"></script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    
+    const operacionais = {{ operacionais|default:"0" }};
+    const emManutencao = {{ em_manutencao|default:"0" }};
+    const totalEquipamentos = {{ total_equipamentos|default:"0" }};
+    const naoLocalizados = totalEquipamentos - operacionais - emManutencao;
+
+    const elNaoLocalizados = document.getElementById('qtd-nao-localizados');
+    if(elNaoLocalizados) elNaoLocalizados.innerText = naoLocalizados;
+
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = 'Inter';
+
+    const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
+    new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['Operacionais', 'Em Manutenção', 'Não Localizados'],
+            datasets: [{
+                data: [operacionais, emManutencao, naoLocalizados],
+                backgroundColor: ['#14b8a6', '#f97316', '#64748b'],
+                borderColor: '#161d2e', 
+                borderWidth: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '70%',
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    const fabLabels = {{ fab_labels|safe }};
+    const fabData = {{ fab_data|safe }};
+    const ctxFab = document.getElementById('graficoMarcas').getContext('2d');
+    new Chart(ctxFab, {
+        type: 'bar',
+        data: {
+            labels: fabLabels,
+            datasets: [{
+                label: 'Unidades',
+                data: fabData,
+                backgroundColor: '#3b82f6',
+                borderRadius: 4,
+                barPercentage: 0.6
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+  });
+</script>
 {% endblock %}

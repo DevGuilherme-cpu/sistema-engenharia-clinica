@@ -6,69 +6,22 @@
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <title>Engenharia Clínica - ClinEng</title>
 
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
     <style>
-      body {
-        margin: 0;
-        font-family: "Inter", sans-serif;
-        background-color: #090d18;
-        color: #e2e8f0;
-        display: flex;
-        flex-direction: column; /* Necessário para o topo mobile */
-        min-height: 100vh;
-      }
+      body { margin: 0; font-family: "Inter", sans-serif; background-color: #090d18; color: #e2e8f0; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
 
-      /* --- NOVO: BARRA DE TOPO MOBILE --- */
-      .mobile-header {
-        display: none;
-        background: #0e1320;
-        padding: 15px 20px;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        position: sticky;
-        top: 0;
-        z-index: 90;
-      }
-      .mobile-menu-btn {
-        background: none;
-        border: none;
-        color: #fff;
-        font-size: 22px;
-        cursor: pointer;
-      }
+      /* --- TOPO MOBILE --- */
+      .mobile-header { display: none; background: #0e1320; padding: 15px 20px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.05); position: sticky; top: 0; z-index: 90; }
+      .mobile-menu-btn { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+      .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(3px); z-index: 95; opacity: 0; transition: opacity 0.3s ease; }
 
-      /* --- O FUNDO ESCURO (OVERLAY) QUANDO O MENU ABRE --- */
-      .mobile-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(3px);
-        z-index: 95;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      }
+      /* --- CONTAINER E SIDEBAR DESKTOP --- */
+      .app-container { display: flex; flex: 1; min-height: 100vh; position: relative; }
 
-      /* --- CONTAINER PRINCIPAL --- */
-      .app-container {
-        display: flex;
-        flex: 1;
-        min-height: 100vh;
-        position: relative;
-      }
-
-      /* --- SIDEBAR --- */
       .sidebar {
-        width: 250px;
+        width: 260px;
         background-color: #0e1320;
         border-right: 1px solid rgba(255, 255, 255, 0.05);
         display: flex;
@@ -77,253 +30,137 @@
         position: sticky;
         top: 0;
         flex-shrink: 0;
-        transition: transform 0.3s ease;
+        /* A transição suave ao fechar/abrir a barra */
+        transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         z-index: 100;
+        overflow-x: hidden;
       }
 
-      .sidebar h2 {
+      /* CABEÇALHO DA SIDEBAR COM O BOTÃO DE TOGGLE */
+      .sidebar-header {
         padding: 20px;
-        color: #fff;
-        margin: 0;
-        font-size: 1.2rem;
         display: flex;
         align-items: center;
+        justify-content: space-between;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        min-width: 260px; /* Evita que o texto quebre ao encolher */
       }
-      .sidebar ul {
-        list-style: none;
-        padding: 10px 0;
-        margin: 0;
-        flex: 1;
-        overflow-y: auto;
-      }
+      .sidebar-header h2 { color: #fff; margin: 0; font-size: 1.1rem; display: flex; align-items: center; }
+      .toggle-desktop-btn { background: transparent; border: none; color: #64748b; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
+      .toggle-desktop-btn:hover { color: #2dd4bf; }
+
+      .sidebar ul { list-style: none; padding: 10px 0; margin: 0; flex: 1; overflow-y: auto; overflow-x: hidden; }
       .sidebar ul li a {
-        display: block;
-        padding: 12px 20px;
-        color: #94a3b8;
-        text-decoration: none;
-        font-size: 0.95rem;
-        font-weight: 500;
-        transition: 0.2s;
+        display: flex; align-items: center; padding: 14px 20px; color: #94a3b8; text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: 0.2s; white-space: nowrap;
       }
-      .sidebar ul li a:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-      }
-      .sidebar .menu-item {
-        cursor: pointer;
-      }
+      .sidebar ul li a i { width: 24px; text-align: center; margin-right: 12px; font-size: 1.1rem; }
+      .sidebar ul li a:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+      .sidebar .menu-item { cursor: pointer; }
 
-      .submenu {
-        display: none;
-        background: rgba(0, 0, 0, 0.2);
-      }
-      .submenu.open {
-        display: block;
-      }
-      .submenu li a {
-        padding-left: 45px;
-        font-size: 0.85rem;
-      }
+      .submenu { display: none; background: rgba(0, 0, 0, 0.2); }
+      .submenu.open { display: block; }
+      .submenu li a { padding-left: 56px; font-size: 0.85rem; }
 
-      .main-content {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-      }
+      .sidebar-footer { margin-top: auto; padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.05); white-space: nowrap; min-width: 260px; }
+      
+      /* ========================================= */
+      /* O ESTADO "RECOLHIDO" DA BARRA LATERAL     */
+      /* ========================================= */
+      .sidebar.collapsed { width: 76px; }
+      .sidebar.collapsed .nav-text, 
+      .sidebar.collapsed .fa-chevron-down,
+      .sidebar.collapsed .user-greeting { display: none !important; }
+      
+      .sidebar.collapsed .sidebar-header { justify-content: center; padding: 20px 0; min-width: 76px; }
+      .sidebar.collapsed .sidebar-header h2 { display: none; }
+      
+      .sidebar.collapsed ul li a { padding: 16px 0; justify-content: center; }
+      .sidebar.collapsed ul li a i { margin-right: 0; font-size: 1.2rem; }
+      .sidebar.collapsed .submenu { display: none !important; } /* Força os submenus a fechar */
+      
+      .sidebar.collapsed .sidebar-footer { padding: 15px 10px; min-width: 76px; }
+      .sidebar.collapsed .sidebar-footer a { justify-content: center; padding: 12px 0; }
+      .sidebar.collapsed .sidebar-footer a i { margin: 0; font-size: 1.1rem; }
 
-      /* 📱 MÁGICA DA RESPONSIVIDADE (Ecrãs < 768px) */
+      .main-content { flex: 1; min-width: 0; display: flex; flex-direction: column; transition: margin 0.4s ease; }
+
       @media (max-width: 768px) {
-        .mobile-header {
-          display: flex;
-        }
-        .app-container {
-          flex-direction: column;
-        }
-
-        /* Esconde a barra lateral fora do ecrã */
-        .sidebar {
-          position: fixed;
-          left: 0;
-          transform: translateX(-100%);
-        }
-        /* Mostra a barra quando a classe 'open' é adicionada pelo JS */
-        .sidebar.open {
-          transform: translateX(0);
-        }
-
-        /* Mostra o overlay escuro atrás do menu */
-        .mobile-overlay.active {
-          display: block;
-          opacity: 1;
-        }
-
-        /* 🎩 HACK DE SÉNIOR: Transforma as grelhas duplas do v0.dev em 1 coluna no telemóvel! */
-        div[style*="grid-template-columns: 1fr 1fr"],
-        div[style*="grid-template-columns:1fr 1fr"],
-        div[style*="grid-template-columns: 1fr 2fr"],
-        div[style*="grid-template-columns:1fr 2fr"] {
-          grid-template-columns: 1fr !important;
-          gap: 16px !important;
-        }
-
-        /* Reduz os paddings laterais no telemóvel para aproveitar o espaço */
-        .main-content > div {
-          padding: 16px !important;
-        }
-        .card {
-          padding: 16px !important;
-        }
+        .mobile-header { display: flex; }
+        .app-container { flex-direction: column; }
+        .sidebar { position: fixed; left: 0; transform: translateX(-100%); width: 260px !important; }
+        .sidebar.open { transform: translateX(0); }
+        .mobile-overlay.active { display: block; opacity: 1; }
+        .toggle-desktop-btn { display: none; }
       }
     </style>
   </head>
   <body hx-boost="true">
+    
+    <!-- Cabeçalho Mobile -->
     <header class="mobile-header">
       <div style="display: flex; align-items: center; gap: 10px">
         <i class="fas fa-heartbeat" style="color: #2dd4bf; font-size: 20px"></i>
-        <span style="font-weight: 700; color: #fff; font-size: 18px"
-          >ClinEng</span
-        >
+        <span style="font-weight: 700; color: #fff; font-size: 18px">ClinEng</span>
       </div>
-      <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-        <i class="fas fa-bars"></i>
-      </button>
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></button>
     </header>
 
-    <div
-      id="mobile-overlay"
-      class="mobile-overlay"
-      onclick="toggleMobileMenu()"
-    ></div>
+    <div id="mobile-overlay" class="mobile-overlay" onclick="toggleMobileMenu()"></div>
 
     <div class="app-container">
+      
+      <!-- BARRA LATERAL -->
       <nav class="sidebar" id="sidebar">
-        <h2>
-          <i
-            class="fas fa-heartbeat"
-            style="color: #2dd4bf; margin-right: 10px"
-          ></i>
-          Eng. Clínica
-        </h2>
+        
+        <div class="sidebar-header">
+            <h2><i class="fas fa-heartbeat" style="color: #2dd4bf; margin-right: 10px"></i> <span class="nav-text">Eng. Clínica</span></h2>
+            <!-- O botão que recolhe a barra lateral -->
+            <button class="toggle-desktop-btn" onclick="toggleDesktopSidebar()" title="Recolher Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
         <ul>
-          <li>
-            <a href="{% url 'dashboard' %}"
-              ><i class="fas fa-chart-pie" style="width: 20px"></i> Dashboard</a
-            >
-          </li>
+          <li><a href="{% url 'dashboard' %}"><i class="fas fa-chart-pie"></i> <span class="nav-text">Dashboard</span></a></li>
 
           <li class="menu-item" onclick="toggleSubmenu('sub-equipamentos')">
-            <a href="javascript:void(0)"><i class="fas fa-briefcase-medical" style="width: 20px;"></i> Equipamentos
-                <i class="fas fa-chevron-down" style="float: right; margin-top: 5px; font-size: 0.8rem;"></i></a>
+            <a href="javascript:void(0)"><i class="fas fa-briefcase-medical"></i> <span class="nav-text flex-1">Equipamentos</span> <i class="fas fa-chevron-down text-[10px] ml-auto"></i></a>
             <ul id="sub-equipamentos" class="submenu">
-                <li><a href="{% url 'equipamentos' %}"><i class="fas fa-list" style="width: 20px;"></i> Relação Geral</a></li>
-                <li><a href="{% url 'cadastrar_equipamento' %}"><i class="fas fa-desktop" style="width: 20px;"></i> Cadastrar Equipamento</a></li>
+                <li><a href="{% url 'equipamentos' %}"><span class="nav-text">Relação Geral</span></a></li>
+                <li><a href="{% url 'cadastrar_equipamento' %}"><span class="nav-text">Cadastrar Equipamento</span></a></li>
             </ul>
-        </li>
+          </li>
         
-        <li class="menu-item" onclick="toggleSubmenu('sub-manutencoes')">
-            <a href="javascript:void(0)"><i class="fas fa-tools" style="width: 20px;"></i> Manutenções
-                <i class="fas fa-chevron-down" style="float: right; margin-top: 5px; font-size: 0.8rem;"></i></a>
+          <li class="menu-item" onclick="toggleSubmenu('sub-manutencoes')">
+            <a href="javascript:void(0)"><i class="fas fa-tools"></i> <span class="nav-text flex-1">Manutenções</span> <i class="fas fa-chevron-down text-[10px] ml-auto"></i></a>
             <ul id="sub-manutencoes" class="submenu">
-                <li><a href="{% url 'listar_manutencoes' %}"><i class="fas fa-clipboard-list" style="width: 20px;"></i> Histórico Geral</a></li>
-                
-                <li><a href="{% url 'cadastrar_manutencao' %}?tipo=preventiva"><i class="fas fa-check-circle" style="width: 20px; color:#2dd4bf;"></i> Nova Preventiva</a></li>
-                <li><a href="{% url 'cadastrar_manutencao' %}?tipo=corretiva"><i class="fas fa-wrench" style="width: 20px; color:#fb923c;"></i> Nova Corretiva</a></li>
+                <li><a href="{% url 'listar_manutencoes' %}"><span class="nav-text">Histórico Geral</span></a></li>
+                <li><a href="{% url 'cadastrar_manutencao' %}?tipo=preventiva"><span class="nav-text">Nova Preventiva</span></a></li>
+                <li><a href="{% url 'cadastrar_manutencao' %}?tipo=corretiva"><span class="nav-text">Nova Corretiva</span></a></li>
             </ul>
-        </li>
+          </li>
 
           <li class="menu-item" onclick="toggleSubmenu('sub-acessorios')">
-            <a href="javascript:void(0)"
-              ><i class="fas fa-plug" style="width: 20px"></i> Acessórios
-              <i
-                class="fas fa-chevron-down"
-                style="float: right; margin-top: 5px; font-size: 0.8rem"
-              ></i
-            ></a>
+            <a href="javascript:void(0)"><i class="fas fa-plug"></i> <span class="nav-text flex-1">Acessórios</span> <i class="fas fa-chevron-down text-[10px] ml-auto"></i></a>
             <ul id="sub-acessorios" class="submenu">
-              <li>
-                <a href="{% url 'acessorios' %}"
-                  ><i class="fas fa-clipboard-list" style="width: 20px"></i>
-                  Histórico</a
-                >
-              </li>
-              <li>
-                <a href="{% url  'registrar_troca' %}"
-                  ><i class="fas fa-sync-alt" style="width: 20px"></i> Registrar
-                  Troca</a
-                >
-              </li>
+              <li><a href="{% url 'acessorios' %}"><span class="nav-text">Histórico</span></a></li>
+              <li><a href="{% url  'registrar_troca' %}"><span class="nav-text">Registrar Troca</span></a></li>
             </ul>
           </li>
 
-          <li><a href="{% url 'relatorio_marcas' %}"><i class="fas fa-file-pdf" style="width: 20px;"></i> Relatórios</a></li>
-
-          {% if user.is_superuser or user.is_staff %}
-          <li class="menu-item" onclick="toggleSubmenu('sub-admin')">
-            <a href="javascript:void(0)"
-              ><i class="fas fa-users-cog" style="width: 20px"></i>
-              Administração
-              <i
-                class="fas fa-chevron-down"
-                style="float: right; margin-top: 5px; font-size: 0.8rem"
-              ></i
-            ></a>
-            <ul id="sub-admin" class="submenu">
-              <li><a href="{% url 'cadastrar_usuario' %}"><i class="fas fa-user-plus" style="width: 20px;"></i> Novo Usuário</a></li>
-            </ul>
-          </li>
-          {% endif %}
+          <li><a href="{% url 'relatorio_marcas' %}"><i class="fas fa-file-pdf"></i> <span class="nav-text">Relatórios</span></a></li>
         </ul>
 
-        <div
-          style="
-            margin-top: auto;
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            text-align: center;
-          "
-        >
-          <p style="color: #8899b0; font-size: 0.85rem; margin-bottom: 12px">
-            <i class="fas fa-user-circle"></i> Olá,
-            <strong style="color: #dde4f0"
-              >{{ user.first_name|default:user.username }}</strong
-            >
+        <!-- Perfil e Logout -->
+        <div class="sidebar-footer">
+          <p class="user-greeting" style="color: #8899b0; font-size: 0.85rem; margin-bottom: 12px; text-align: center;">
+            <i class="fas fa-user-circle"></i> Olá, <strong style="color: #dde4f0">{{ user.first_name|default:user.username }}</strong>
           </p>
-          <a
-            href="#"
-            style="
-              display: block;
-              background: rgba(255, 255, 255, 0.05);
-              border: 1px solid rgba(255, 255, 255, 0.1);
-              color: #dde4f0;
-              padding: 10px;
-              text-decoration: none;
-              border-radius: 8px;
-              font-weight: 500;
-              margin-bottom: 8px;
-              transition: 0.3s;
-              font-size: 0.85rem;
-            "
-          >
-            <i class="fas fa-user-cog"></i> Meu Perfil
+          <a href="#" style="display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #dde4f0; padding: 10px; text-decoration: none; border-radius: 8px; font-weight: 500; margin-bottom: 8px; font-size: 0.85rem;">
+            <i class="fas fa-user-cog" style="margin-right: 8px;"></i> <span class="nav-text">Meu Perfil</span>
           </a>
-          <a
-            href="{% url 'logout' %}"
-            style="
-              display: block;
-              background: rgba(239, 68, 68, 0.15);
-              border: 1px solid rgba(239, 68, 68, 0.25);
-              color: #fca5a5;
-              padding: 10px;
-              text-decoration: none;
-              border-radius: 8px;
-              font-weight: 500;
-              transition: 0.3s;
-              font-size: 0.85rem;
-            "
-          >
-            <i class="fas fa-sign-out-alt"></i> Sair
+          <a href="{% url 'logout' %}" hx-boost="false" style="display: flex; align-items: center; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.25); color: #fca5a5; padding: 10px; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 0.85rem;">
+            <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> <span class="nav-text">Sair</span>
           </a>
         </div>
       </nav>
@@ -332,33 +169,60 @@
     </div>
 
     <script>
-      // Lógica dos Submenus da Sidebar
-      function toggleSubmenu(id) {
-        const submenu = document.getElementById(id);
-        submenu.classList.toggle("open");
+      // 1. Função inteligente que aplica o estado (aberto/fechado) sempre que a tela muda
+      function aplicarEstadoSidebar() {
+          const sidebar = document.getElementById("sidebar");
+          if (sidebar && localStorage.getItem("sidebar_collapsed") === "true") {
+              sidebar.classList.add("collapsed");
+          }
+      }
 
-        // Roda a setinha para baixo/cima
-        const icon =
-          submenu.previousElementSibling.querySelector(".fa-chevron-down");
-        if (icon) {
-          icon.style.transform = submenu.classList.contains("open")
-            ? "rotate(180deg)"
-            : "rotate(0deg)";
-          icon.style.transition = "transform 0.3s ease";
+      document.addEventListener("DOMContentLoaded", aplicarEstadoSidebar);
+      
+      document.body.addEventListener('htmx:afterSwap', aplicarEstadoSidebar);
+
+      // 2. Lógica de Encolher/Expandir a Barra Desktop
+      function toggleDesktopSidebar() {
+          const sidebar = document.getElementById("sidebar"); // Busca a barra atualizada
+          if (!sidebar) return;
+
+          sidebar.classList.toggle("collapsed");
+          localStorage.setItem("sidebar_collapsed", sidebar.classList.contains("collapsed"));
+          
+          if(sidebar.classList.contains("collapsed")) {
+              document.querySelectorAll('.submenu').forEach(sub => sub.classList.remove('open'));
+              document.querySelectorAll('.fa-chevron-down').forEach(icon => icon.style.transform = 'rotate(0deg)');
+          }
+      }
+
+      // 3. Lógica dos Submenus
+      function toggleSubmenu(id) {
+        const sidebar = document.getElementById("sidebar"); // Busca a barra atualizada
+        
+        if(sidebar && sidebar.classList.contains("collapsed")) {
+            toggleDesktopSidebar();
+        }
+
+        const submenu = document.getElementById(id);
+        if (submenu) {
+            submenu.classList.toggle("open");
+            const icon = submenu.previousElementSibling.querySelector(".fa-chevron-down");
+            if (icon) {
+                icon.style.transform = submenu.classList.contains("open") ? "rotate(180deg)" : "rotate(0deg)";
+                icon.style.transition = "transform 0.3s ease";
+            }
         }
       }
 
+      // 4. Lógica do Menu Mobile
       function toggleMobileMenu() {
         const sidebar = document.getElementById("sidebar");
         const overlay = document.getElementById("mobile-overlay");
-
-        sidebar.classList.toggle("open");
-        overlay.classList.toggle("active");
-
-        if (sidebar.classList.contains("open")) {
-          document.body.style.overflow = "hidden";
-        } else {
-          document.body.style.overflow = "";
+        
+        if (sidebar && overlay) {
+            sidebar.classList.toggle("open");
+            overlay.classList.toggle("active");
+            document.body.style.overflow = sidebar.classList.contains("open") ? "hidden" : "";
         }
       }
     </script>
