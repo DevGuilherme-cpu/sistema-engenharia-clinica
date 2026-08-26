@@ -21,4 +21,6 @@ urlpatterns = [
     path('relatorio', views.relatorio_marcas, name='relatorio_marcas'),
 
     path('usuario/cadastrar/', views.cadastrar_usuario, name='cadastrar_usuario'),
+
+    path('perfil/', views.meu_perfil, name='meu_perfil'),
 ]

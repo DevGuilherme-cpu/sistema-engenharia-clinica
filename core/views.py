@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
-from .models import Equipamento, Manutencao, Setor, TrocaAcessorio
+from .models import Equipamento, Manutencao, Setor, TrocaAcessorio, User
 from .forms import ManutencaoForm
 
 @login_required
@@ -228,6 +228,32 @@ def cadastrar_usuario(request):
             return redirect('dashboard')
 
     return render(request, 'Usuarios/cadastrar.html', {'active_page': 'admin', 'mensagem': mensagem})
+
+from .models import Perfil
+# Adicione esta função lá no final:
+
+@login_required
+def meu_perfil(request):
+    perfil, created = Perfil.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        request.user.first_name = request.POST.get('first_name', '')
+        request.user.last_name = request.POST.get('last_name', '')
+        request.user.save()
+
+        perfil.telefone = request.POST.get('telefone', '')
+        
+        data_nasc = request.POST.get('data_nascimento')
+        if data_nasc:
+            perfil.data_nascimento = data_nasc
+            
+        if 'foto' in request.FILES:
+            perfil.foto = request.FILES['foto']
+            
+        perfil.save()
+        return redirect('meu_perfil')
+
+    return render(request, 'perfil.html', {'perfil': perfil})
 
 def sair(request):
     logout(request)

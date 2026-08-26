@@ -2,6 +2,7 @@
 {% load static %} 
 
 {% block content %}
+<!-- Nota de Otimização: Em produção, substitua o CDN pelo Tailwind compilado -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
@@ -18,19 +19,18 @@
     overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
   
   .stat-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
   }
 
   .accent-line {
     position: absolute; top: 0; left: 0; right: 0; height: 3px;
   }
 
-  /* --- AS NOVAS TRANSIÇÕES SUAVES (EFEITO CASCATA) --- */
   @keyframes smoothEntry {
     0% { opacity: 0; transform: translateY(15px); }
     100% { opacity: 1; transform: translateY(0); }
@@ -38,10 +38,9 @@
   
   .animate-entry {
     animation: smoothEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0; /* Começa invisível até a animação rodar */
+    opacity: 0; 
   }
   
-  /* Tempos diferentes para cada bloco entrar um de cada vez */
   .delay-1 { animation-delay: 0.1s; }
   .delay-2 { animation-delay: 0.2s; }
   .delay-3 { animation-delay: 0.3s; }
@@ -51,24 +50,30 @@
 
 <div class="dash-container flex flex-col w-full text-gray-200">
   
-  <!-- CABEÇALHO LIMPO (Sem o segundo botão de sair) -->
-  <header class="sticky top-0 z-40 flex items-center justify-between px-5 md:px-8 py-4 bg-[#0a0e1c] border-b border-white/5">
+  <!-- CABEÇALHO -->
+  <header class="sticky top-0 z-40 flex items-center justify-between px-5 md:px-8 py-4 bg-[#0a0e1c]/95 backdrop-blur-md border-b border-white/5">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-teal-500/10 border border-teal-500/20">
-        <i class="fas fa-heartbeat text-teal-400"></i>
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-teal-500/10 border border-teal-500/20 shadow-inner">
+        <i class="fas fa-heartbeat text-teal-400 text-lg"></i>
       </div>
       <div>
-        <h1 class="text-sm font-semibold text-slate-200">Visão Geral</h1>
-        <p class="text-[11px] text-slate-500">Engenharia Clínica HGP</p>
+        <h1 class="text-sm font-bold text-slate-200 tracking-wide">Visão Geral</h1>
+        <p class="text-[11px] text-slate-500 font-medium uppercase tracking-widest">Engenharia Clínica HGP</p>
       </div>
     </div>
     
-    <!-- Perfil Simples -->
-    <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
-            <i class="fas fa-user text-slate-400 text-xs"></i>
-        </div>
-        <span class="text-sm font-medium text-slate-300 hidden sm:block">Olá, {{ user.first_name|default:user.username }}</span>
+    <!-- Perfil Dinâmico e Seguro -->
+    <div class="flex items-center gap-3 cursor-pointer group" title="Ir para Meu Perfil" onclick="window.location.href='{% url 'meu_perfil' %}'">
+      <div class="w-9 h-9 rounded-full border-2 border-transparent group-hover:border-teal-500/50 transition-colors overflow-hidden bg-slate-800 flex items-center justify-center shrink-0 shadow-lg">
+          {% if user.perfil and user.perfil.foto %}
+              <img src="{{ user.perfil.foto.url }}" alt="Foto de {{ user.first_name }}" class="w-full h-full object-cover">
+          {% else %}
+              <img src="https://ui-avatars.com/api/?name={{ user.first_name|default:user.username }}+{{ user.last_name }}&background=0D8B93&color=fff&size=100&bold=true" alt="Avatar Genérico" class="w-full h-full object-cover">
+          {% endif %}
+      </div>
+      <span class="text-sm font-semibold text-slate-300 hidden sm:block group-hover:text-white transition-colors">
+          Olá, {{ user.first_name|default:user.username }}
+      </span>
     </div>
   </header>
 
@@ -79,7 +84,7 @@
             <h2 class="text-2xl font-bold text-white tracking-tight">Dashboard</h2>
             <p class="text-sm text-slate-400 mt-1">Acompanhamento em tempo real do parque tecnológico.</p>
         </div>
-        <button class="flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-400 text-slate-900 text-sm font-bold rounded-lg transition-colors shadow-lg shadow-teal-500/20">
+        <button aria-label="Exportar Dados em PDF" class="flex items-center justify-center gap-2 px-5 py-2.5 bg-teal-500 hover:bg-teal-400 text-slate-900 text-sm font-bold rounded-xl transition-all shadow-lg shadow-teal-500/20 active:scale-95">
             <i class="fas fa-download"></i> Exportar Dados
         </button>
     </div>
@@ -91,10 +96,10 @@
         <div class="flex items-start justify-between gap-3">
           <div class="flex-1">
             <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Total de Equipamentos</p>
-            <p class="text-3xl font-bold text-white">{{ total_equipamentos|default:"0" }}</p>
+            <p class="text-3xl font-bold text-white tabular-nums">{{ total_equipamentos|default:"0" }}</p>
           </div>
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-400">
-            <i class="fas fa-desktop"></i>
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <i class="fas fa-desktop text-lg"></i>
           </div>
         </div>
       </article>
@@ -104,10 +109,10 @@
         <div class="flex items-start justify-between gap-3">
           <div class="flex-1">
             <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Operacionais</p>
-            <p class="text-3xl font-bold text-white">{{ operacionais|default:"0" }}</p>
+            <p class="text-3xl font-bold text-white tabular-nums">{{ operacionais|default:"0" }}</p>
           </div>
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-teal-500/10 text-teal-400">
-            <i class="fas fa-check-circle"></i>
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-400 border border-teal-500/20">
+            <i class="fas fa-check-circle text-lg"></i>
           </div>
         </div>
       </article>
@@ -117,10 +122,10 @@
         <div class="flex items-start justify-between gap-3">
           <div class="flex-1">
             <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Em Manutenção</p>
-            <p class="text-3xl font-bold text-white">{{ em_manutencao|default:"0" }}</p>
+            <p class="text-3xl font-bold text-white tabular-nums">{{ em_manutencao|default:"0" }}</p>
           </div>
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-orange-500/10 text-orange-400">
-            <i class="fas fa-tools"></i>
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            <i class="fas fa-tools text-lg"></i>
           </div>
         </div>
       </article>
@@ -130,10 +135,10 @@
         <div class="flex items-start justify-between gap-3">
           <div class="flex-1">
             <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Não Localizados</p>
-            <p id="qtd-nao-localizados" class="text-3xl font-bold text-white">0</p>
+            <p id="qtd-nao-localizados" class="text-3xl font-bold text-white tabular-nums">0</p>
           </div>
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-slate-500/10 text-slate-400">
-            <i class="fas fa-question-circle"></i>
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center bg-slate-500/10 text-slate-400 border border-slate-500/20">
+            <i class="fas fa-question-circle text-lg"></i>
           </div>
         </div>
       </article>
@@ -144,7 +149,7 @@
       
       <article class="card flex flex-col p-1 animate-entry delay-5">
         <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <h2 class="text-sm font-semibold text-white">Status do Sistema</h2>
+          <h2 class="text-sm font-semibold text-white tracking-wide">Status do Sistema</h2>
         </div>
         <div class="flex-1 p-5">
           <div style="position: relative; height: 300px; width: 100%;">
@@ -155,7 +160,7 @@
 
       <article class="card flex flex-col p-1 animate-entry delay-5">
         <div class="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <h2 class="text-sm font-semibold text-white">Top 5 Fabricantes</h2>
+          <h2 class="text-sm font-semibold text-white tracking-wide">Top 5 Fabricantes</h2>
         </div>
         <div class="flex-1 p-5">
           <div style="position: relative; height: 300px; width: 100%;">
@@ -168,25 +173,37 @@
   </main>
 </div>
 
-<!-- Importação do Chart.js -->
+<!-- Usando json_script para injetar dados com 100% de segurança contra XSS -->
+{{ fab_labels|json_script:"fab-labels-data" }}
+{{ fab_data|json_script:"fab-data-data" }}
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    
-    const operacionais = {{ operacionais|default:"0" }};
-    const emManutencao = {{ em_manutencao|default:"0" }};
-    const totalEquipamentos = {{ total_equipamentos|default:"0" }};
+<<script>
+  function renderizarDashboard() {
+    const elNaoLocalizados = document.getElementById('qtd-nao-localizados');
+    const canvasStatus = document.getElementById('graficoStatus');
+    const canvasMarcas = document.getElementById('graficoMarcas');
+
+    // Se os gráficos não estiverem na tela, interrompe para não gerar erros
+    if (!canvasStatus || !canvasMarcas) return;
+
+    // 1. Tratamento seguro de números e cálculo matemático
+    const operacionais = parseInt("{{ operacionais|default:'0' }}", 10);
+    const emManutencao = parseInt("{{ em_manutencao|default:'0' }}", 10);
+    const totalEquipamentos = parseInt("{{ total_equipamentos|default:'0' }}", 10);
     const naoLocalizados = totalEquipamentos - operacionais - emManutencao;
 
-    const elNaoLocalizados = document.getElementById('qtd-nao-localizados');
-    if(elNaoLocalizados) elNaoLocalizados.innerText = naoLocalizados;
+    if (elNaoLocalizados) {
+        elNaoLocalizados.innerText = naoLocalizados;
+    }
 
+    // 2. Estilo Padrão do Chart.js
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.font.family = 'Inter';
 
-    const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
-    new Chart(ctxStatus, {
+    // 3. Gráfico de Rosca (Status)
+    new Chart(canvasStatus.getContext('2d'), {
         type: 'doughnut',
         data: {
             labels: ['Operacionais', 'Em Manutenção', 'Não Localizados'],
@@ -194,39 +211,53 @@
                 data: [operacionais, emManutencao, naoLocalizados],
                 backgroundColor: ['#14b8a6', '#f97316', '#64748b'],
                 borderColor: '#161d2e', 
-                borderWidth: 4
+                borderWidth: 4,
+                hoverOffset: 4
             }]
         },
         options: {
-            responsive: true, maintainAspectRatio: false, cutout: '70%',
-            plugins: { legend: { position: 'bottom' } }
+            responsive: true, maintainAspectRatio: false, cutout: '75%',
+            plugins: { legend: { position: 'bottom', labels: { padding: 20 } } }
         }
     });
 
-    const fabLabels = {{ fab_labels|safe }};
-    const fabData = {{ fab_data|safe }};
-    const ctxFab = document.getElementById('graficoMarcas').getContext('2d');
-    new Chart(ctxFab, {
-        type: 'bar',
-        data: {
-            labels: fabLabels,
-            datasets: [{
-                label: 'Unidades',
-                data: fabData,
-                backgroundColor: '#3b82f6',
-                borderRadius: 4,
-                barPercentage: 0.6
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
-                x: { grid: { display: false } }
+    const fabLabelsData = document.getElementById('fab-labels-data');
+    const fabDataData = document.getElementById('fab-data-data');
+    
+    if (fabLabelsData && fabDataData) {
+        const fabLabels = JSON.parse(fabLabelsData.textContent);
+        const fabData = JSON.parse(fabDataData.textContent);
+        
+        const ctxFab = canvasMarcas.getContext('2d');
+        
+        let gradient = ctxFab.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, '#3b82f6');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
+
+        new Chart(ctxFab, {
+            type: 'bar',
+            data: {
+                labels: fabLabels,
+                datasets: [{
+                    label: 'Unidades',
+                    data: fabData,
+                    backgroundColor: gradient,
+                    borderRadius: 6,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { grid: { display: false } }
+                }
             }
-        }
-    });
-  });
+        });
+    }
+  }
+
+  renderizarDashboard();
 </script>
 {% endblock %}

@@ -156,7 +156,7 @@
           <p class="user-greeting" style="color: #8899b0; font-size: 0.85rem; margin-bottom: 12px; text-align: center;">
             <i class="fas fa-user-circle"></i> Olá, <strong style="color: #dde4f0">{{ user.first_name|default:user.username }}</strong>
           </p>
-          <a href="#" style="display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #dde4f0; padding: 10px; text-decoration: none; border-radius: 8px; font-weight: 500; margin-bottom: 8px; font-size: 0.85rem;">
+          <a href="{% url 'meu_perfil' %}" style="display: flex; align-items: center; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #dde4f0; padding: 10px; text-decoration: none; border-radius: 8px; font-weight: 500; margin-bottom: 8px; font-size: 0.85rem;">
             <i class="fas fa-user-cog" style="margin-right: 8px;"></i> <span class="nav-text">Meu Perfil</span>
           </a>
           <a href="{% url 'logout' %}" hx-boost="false" style="display: flex; align-items: center; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.25); color: #fca5a5; padding: 10px; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 0.85rem;">
