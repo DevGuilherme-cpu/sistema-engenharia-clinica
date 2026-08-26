@@ -1,0 +1,22 @@
+{
+    "name": "ClinEng - Engenharia Clínica",
+    "short_name": "ClinEng",
+    "description": "Sistema de Gestão de Engenharia Clínica",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#090d18",
+    "theme_color": "#090d18",
+    "orientation": "portrait",
+    "icons": [
+      {
+        "src": "https://ui-avatars.com/api/?name=CE&background=0D8B93&color=fff&size=192",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "https://ui-avatars.com/api/?name=CE&background=0D8B93&color=fff&size=512",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }

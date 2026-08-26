@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from django.contrib.auth.views import LoginView
 from . import views
 
@@ -23,4 +24,7 @@ urlpatterns = [
     path('usuario/cadastrar/', views.cadastrar_usuario, name='cadastrar_usuario'),
 
     path('perfil/', views.meu_perfil, name='meu_perfil'),
+
+    path('manifest.json', TemplateView.as_view(template_name="manifest.json", content_type="application/json"), name="manifest"),
+    path('sw.js', TemplateView.as_view(template_name="sw.js", content_type="application/javascript"), name="sw"),
 ]

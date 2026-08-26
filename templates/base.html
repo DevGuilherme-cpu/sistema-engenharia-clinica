@@ -9,6 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
+    <!-- Configurações PWA Mobile -->
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <meta name="theme-color" content="#090d18">
+    <link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=CE&background=0D8B93&color=fff&size=192">
+
     <style>
       body { margin: 0; font-family: "Inter", sans-serif; background-color: #090d18; color: #e2e8f0; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
 
@@ -224,6 +229,17 @@
             overlay.classList.toggle("active");
             document.body.style.overflow = sidebar.classList.contains("open") ? "hidden" : "";
         }
+      }
+    </script>
+
+    <!-- Registo do Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register("{% url 'sw' %}")
+            .then(reg => console.log('PWA ativado! O sistema suporta modo offline.', reg.scope))
+            .catch(err => console.error('Erro no PWA:', err));
+        });
       }
     </script>
   </body>
