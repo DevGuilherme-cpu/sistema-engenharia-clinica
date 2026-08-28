@@ -1,9 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <title>Engenharia Clínica - ClinEng</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -35,7 +37,6 @@
         position: sticky;
         top: 0;
         flex-shrink: 0;
-        /* A transição suave ao fechar/abrir a barra */
         transition: width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         z-index: 100;
         overflow-x: hidden;
@@ -48,7 +49,7 @@
         align-items: center;
         justify-content: space-between;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        min-width: 260px; /* Evita que o texto quebre ao encolher */
+        min-width: 260px;
       }
       .sidebar-header h2 { color: #fff; margin: 0; font-size: 1.1rem; display: flex; align-items: center; }
       .toggle-desktop-btn { background: transparent; border: none; color: #64748b; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
@@ -81,7 +82,7 @@
       
       .sidebar.collapsed ul li a { padding: 16px 0; justify-content: center; }
       .sidebar.collapsed ul li a i { margin-right: 0; font-size: 1.2rem; }
-      .sidebar.collapsed .submenu { display: none !important; } /* Força os submenus a fechar */
+      .sidebar.collapsed .submenu { display: none !important; } 
       
       .sidebar.collapsed .sidebar-footer { padding: 15px 10px; min-width: 76px; }
       .sidebar.collapsed .sidebar-footer a { justify-content: center; padding: 12px 0; }
@@ -119,7 +120,6 @@
         
         <div class="sidebar-header">
             <h2><i class="fas fa-heartbeat" style="color: #2dd4bf; margin-right: 10px"></i> <span class="nav-text">Eng. Clínica</span></h2>
-            <!-- O botão que recolhe a barra lateral -->
             <button class="toggle-desktop-btn" onclick="toggleDesktopSidebar()" title="Recolher Menu">
                 <i class="fas fa-bars"></i>
             </button>
@@ -154,6 +154,28 @@
           </li>
 
           <li><a href="{% url 'relatorio_marcas' %}"><i class="fas fa-file-pdf"></i> <span class="nav-text">Relatórios</span></a></li>
+
+          <!-- MENU VIP PADRONIZADO: Só aparece para Administradores -->
+          {% if user.is_staff %}
+          
+          <!-- Divisor e Título (Com ícone de escudo para quando a barra estiver encolhida) -->
+          <li style="margin-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+             <a href="javascript:void(0)" style="padding-top: 20px; padding-bottom: 5px; cursor: default; background: transparent;">
+                <i class="fas fa-shield-alt" style="color: #64748b; font-size: 0.9rem;"></i>
+                <span class="nav-text" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #64748b;">Administração</span>
+             </a>
+          </li>
+
+          <!-- Botão Principal com Submenu -->
+          <li class="menu-item" onclick="toggleSubmenu('sub-equipa')">
+            <a href="javascript:void(0)"><i class="fas fa-users-cog"></i> <span class="nav-text flex-1">Gestão de Equipa</span> <i class="fas fa-chevron-down text-[10px] ml-auto"></i></a>
+            <ul id="sub-equipa" class="submenu">
+                <li><a href="{% url 'aprovar_utilizadores' %}"><span class="nav-text">Aprovações</span></a></li>
+                <li><a href="/admin/auth/user/add/" target="_blank"><span class="nav-text">Cadastrar Novo</span></a></li>
+            </ul>
+          </li>
+          {% endif %}
+
         </ul>
 
         <!-- Perfil e Logout -->
@@ -188,7 +210,7 @@
 
       // 2. Lógica de Encolher/Expandir a Barra Desktop
       function toggleDesktopSidebar() {
-          const sidebar = document.getElementById("sidebar"); // Busca a barra atualizada
+          const sidebar = document.getElementById("sidebar"); 
           if (!sidebar) return;
 
           sidebar.classList.toggle("collapsed");
@@ -202,7 +224,7 @@
 
       // 3. Lógica dos Submenus
       function toggleSubmenu(id) {
-        const sidebar = document.getElementById("sidebar"); // Busca a barra atualizada
+        const sidebar = document.getElementById("sidebar"); 
         
         if(sidebar && sidebar.classList.contains("collapsed")) {
             toggleDesktopSidebar();

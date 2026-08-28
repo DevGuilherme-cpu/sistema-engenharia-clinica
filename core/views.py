@@ -4,8 +4,47 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
-from .models import Equipamento, Manutencao, Setor, TrocaAcessorio, User
+from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import Equipamento, Manutencao, Setor, TrocaAcessorio
 from .forms import ManutencaoForm
+
+def registrar_ultilizador(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.is_active = False
+        user.save()
+
+        messages.success(request, 'Registo efetuado! Aguarde a aprovação da Engenharia Clínica.')
+        return redirect('login')
+    
+@staff_member_required # Impede que técnicos comuns abram esta página
+def aprovar_utilizadores(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        acao = request.POST.get('acao')
+        
+        try:
+            usuario = User.objects.get(id=user_id)
+            if acao == 'aprovar':
+                usuario.is_active = True
+                usuario.save()
+                messages.success(request, f'Acesso liberado com sucesso para {usuario.first_name or usuario.username}.')
+            elif acao == 'rejeitar':
+                usuario.delete()
+                messages.warning(request, f'O registo de {usuario.username} foi rejeitado e apagado.')
+        except User.DoesNotExist:
+            messages.error(request, 'Erro: Utilizador não encontrado.')
+            
+        return redirect('aprovar_utilizadores')
+
+    pendentes = User.objects.filter(is_active=False, is_superuser=False).order_by('-date_joined')
+    
+    return render(request, 'aprovar_usuarios.html', {'pendentes': pendentes})
 
 @login_required
 def dashboard(request):

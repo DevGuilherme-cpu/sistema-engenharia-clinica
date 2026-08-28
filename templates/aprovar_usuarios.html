@@ -1,0 +1,86 @@
+{% extends 'base.html' %} 
+{% load static %} 
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+    .page-wrapper { display: flex; flex-direction: column; align-items: center; min-height: 100%; padding: 2rem 1rem; }
+    .glass-card { background: #161d2e; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5); }
+    .animate-entry { animation: smoothEntry 0.5s ease-out forwards; opacity: 0; }
+    @keyframes smoothEntry { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<div class="page-wrapper w-full text-gray-200">
+    <div class="w-full max-w-4xl animate-entry">
+        
+        <div class="mb-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                    <i class="fas fa-user-shield text-teal-400"></i> Aprovação de Acessos
+                </h1>
+                <p class="text-sm text-slate-400 mt-1">Gira os pedidos de novos utilizadores para entrar no sistema.</p>
+            </div>
+            <div class="px-4 py-2 bg-slate-800 rounded-xl border border-white/5 text-sm font-semibold">
+                Pendentes: <span class="text-teal-400">{{ pendentes|length }}</span>
+            </div>
+        </div>
+
+        {% if pendentes %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for p in pendentes %}
+                <div class="glass-card rounded-2xl p-6 transition-all hover:border-teal-500/30 hover:shadow-teal-500/10">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center shrink-0">
+                                <span class="text-lg font-bold text-slate-300">{{ p.username|make_list|first|upper }}</span>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold">{{ p.first_name }} {{ p.last_name }}</h3>
+                                <p class="text-xs text-slate-400">{{ p.email|default:p.username }}</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-500 bg-slate-800 px-2 py-1 rounded-md">
+                            {{ p.date_joined|date:"d/m/Y" }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3 mt-5 pt-5 border-t border-white/5">
+                        <!-- Botão Rejeitar -->
+                        <form method="POST" class="flex-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ p.id }}">
+                            <input type="hidden" name="acao" value="rejeitar">
+                            <button type="submit" class="w-full px-4 py-2 rounded-xl text-sm font-semibold text-red-400 hover:text-white border border-red-500/20 hover:bg-red-500/20 transition-all">
+                                Rejeitar
+                            </button>
+                        </form>
+                        
+                        <!-- Botão Aprovar -->
+                        <form method="POST" class="flex-1">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ p.id }}">
+                            <input type="hidden" name="acao" value="aprovar">
+                            <button type="submit" class="w-full px-4 py-2 rounded-xl text-sm font-bold text-slate-900 bg-teal-500 hover:bg-teal-400 shadow-lg shadow-teal-500/20 transition-all">
+                                <i class="fas fa-check mr-1"></i> Aprovar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Estado Vazio (Zero Pendências) -->
+            <div class="glass-card rounded-2xl p-12 flex flex-col items-center justify-center text-center">
+                <div class="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-check-circle text-4xl text-teal-500/50"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Tudo em dia!</h3>
+                <p class="text-slate-400 text-sm max-w-sm">Não há novos pedidos de acesso a aguardar aprovação no momento.</p>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

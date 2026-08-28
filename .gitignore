@@ -2,6 +2,7 @@
 .venv/
 venv/
 env/
+node_modules/
 
 # Banco de Dados local (Não enviar para a internet!)
 db.sqlite3
