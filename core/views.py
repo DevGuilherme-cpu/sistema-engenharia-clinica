@@ -6,7 +6,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import Equipamento, Manutencao, Setor, TrocaAcessorio
+from .models import Equipamento, Manutencao, Setor, TrocaAcessorio, Perfil, GuiaMovimentacao, TermoEntrega
 from .forms import ManutencaoForm
 
 def registrar_ultilizador(request):
@@ -268,8 +268,76 @@ def cadastrar_usuario(request):
 
     return render(request, 'Usuarios/cadastrar.html', {'active_page': 'admin', 'mensagem': mensagem})
 
-from .models import Perfil
-# Adicione esta função lá no final:
+# --- GERADOR DE GUIA DE MOVIMENTAÇÃO (GMBP) ---
+@login_required
+def gerar_gmbp(request, id=None):
+    todos_equipamentos = Equipamento.objects.all().order_by('descricao')
+    equipamento_atual = get_object_or_404(Equipamento, id=id) if id else None
+
+    if request.method == 'POST':
+        equip_id = request.POST.get('equipamento_id')
+        equip_selecionado = get_object_or_404(Equipamento, id=equip_id)
+
+        GuiaMovimentacao.objects.create(
+            equipamento=equip_selecionado,
+            orgao_cedente=request.POST.get('orgao_cedente', ''),
+            unidade_cedente=request.POST.get('unidade_cedente', ''),
+            municipio_cedente=request.POST.get('municipio_cedente', ''),
+            orgao_receptor=request.POST.get('orgao_receptor', ''),
+            unidade_receptor=request.POST.get('unidade_receptor', ''),
+            municipio_receptor=request.POST.get('municipio_receptor', ''),
+            tipo_movimentacao=request.POST.get('tipo_movimentacao', 'TRANSFERENCIA_INTERNA'),
+            estado_conservacao=request.POST.get('estado_conservacao', 'PERFEITO'),
+            quantidade=request.POST.get('quantidade', 1),
+            descricao_editada=request.POST.get('descricao_editada', ''),
+            patrimonio_editado=request.POST.get('patrimonio_editado', ''),
+            numero_serie_editado=request.POST.get('numero_serie_editado', ''),
+            responsavel_cedente=request.user,
+        )
+        messages.success(request, 'Guia de Movimentação (GMBP) salva com sucesso!')
+        return redirect('dashboard')
+
+    return render(request, 'gmbp.html', {
+        'equipamento': equipamento_atual,
+        'todos_equipamentos': todos_equipamentos
+    })
+
+# --- GERADOR DE TERMO DE ENTREGA ---
+@login_required
+def gerar_termo(request, id=None):
+    todos_equipamentos = Equipamento.objects.all().order_by('descricao')
+    
+    equipamento_atual = None
+    if id:
+        equipamento_atual = get_object_or_404(Equipamento, id=id)
+
+    if request.method == 'POST':
+        # 1. Pega as LISTAS de equipamentos e patrimônios (pois agora podem ser vários)
+        equip_ids = request.POST.getlist('equipamento_id')
+        patrimonios = request.POST.getlist('patrimonio_editado')
+        
+        acessorios_marcados = request.POST.getlist('acessorios')
+        texto_acessorios = ", ".join(acessorios_marcados)
+
+        for equip_id, patrimonio_editado in zip(equip_ids, patrimonios):
+            equip_selecionado = get_object_or_404(Equipamento, id=equip_id)
+
+        TermoEntrega.objects.create(
+            equipamento=equip_selecionado,
+            setor_destino=request.POST.get('setor_destino', ''),
+            acessorios_inclusos=texto_acessorios,
+            acessorios_pendentes=request.POST.get('acessorios_pendentes', ''),
+            descricao_editada=f"{equip_selecionado.descricao} {equip_selecionado.marca} {equip_selecionado.modelo}",
+            patrimonio_editado=equip_selecionado.patrimonio,
+            responsavel_entrega=request.user,
+        )
+        messages.success(request, 'Termo de Entrega gerado e salvo no histórico com sucesso!')
+        return redirect('dashboard')
+
+    return render(request, 'termo_entrega.html', {
+        'todos_equipamentos': todos_equipamentos,
+        'equipamento': equipamento_atual
+    })
 
 @login_required
 def meu_perfil(request):

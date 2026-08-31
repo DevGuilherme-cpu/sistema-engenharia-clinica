@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .editor-bg { background-color: #0f172a; min-height: 100vh; padding: 2rem; display: flex; justify-content: center; overflow-y: auto; }
+    
+    .a4-paper {
+        background: white; width: 210mm; min-height: 297mm; padding: 25mm; 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5); color: black; font-family: Arial, sans-serif; position: relative;
+    }
+
+    .input-invisivel {
+        border: none; background: transparent; border-bottom: 1px dashed transparent; 
+        font-family: inherit; font-size: inherit; color: inherit; width: 100%; outline: none; transition: 0.2s;
+    }
+    .input-invisivel:hover, .input-invisivel:focus { border-bottom: 1px dashed #2563eb; background: rgba(37, 99, 235, 0.05); }
+    
+    /* Tabelas e Alinhamento Centralizado */
+    .termo-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .termo-table th, .termo-table td { 
+        border: 1px solid black; 
+        padding: 12px 10px; 
+        text-align: center; 
+        vertical-align: middle; 
+        word-wrap: break-word; 
+    }
+    
+    select.input-invisivel { 
+        cursor: pointer; font-weight: bold; 
+        white-space: normal; 
+        text-align: center; text-align-last: center; 
+        height: auto; width: 100%; 
+    }
+
+    .acessorios-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 5px; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+    .checkbox-item:hover { background: #f8fafc; border-color: #cbd5e1; }
+    
+    .print-only-text { display: none; }
+    
+    .btn-add { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #0d9488; font-weight: bold; cursor: pointer; font-size: 14px; border: none; background: none; transition: 0.3s; }
+    .btn-add:hover { color: #2dd4bf; }
+
+    .btn-float {
+        position: fixed; bottom: 2rem; right: 2rem; background: linear-gradient(135deg, #2563eb, #0d9488);
+        color: white; padding: 15px 25px; border-radius: 50px; box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        font-weight: bold; cursor: pointer; border: none; transition: 0.3s; display: flex; gap: 10px; align-items: center; z-index: 100;
+    }
+    .btn-float:hover { transform: translateY(-5px); }
+
+    /* MODO IMPRESSÃO */
+    @media print {
+        @page { margin: 0; size: A4; }
+        body { background: white !important; margin: 0; padding: 0; }
+        .editor-bg { padding: 0; background: white; display: block; }
+        .a4-paper { box-shadow: none; width: 100%; min-height: 100%; padding: 20mm; }
+        /* Esconde Botões e Lixeira na impressão */
+        #sidebar, .mobile-header, .btn-float, .btn-add, .btn-remove { display: none !important; } 
+        .main-content { margin: 0 !important; width: 100% !important; }
+        .acessorios-grid { display: none !important; }
+        .print-only-text { display: block !important; font-size: 13px; font-weight: normal; margin-top: 5px;}
+        .input-invisivel { border-bottom: none !important; appearance: none; -webkit-appearance: none; resize: none; overflow: hidden; }
+    }
+</style>
+
+<div class="editor-bg">
+    <form id="formTermo" method="POST" class="a4-paper">
+        {% csrf_token %}
+        
+        <h1 class="text-center font-bold text-2xl underline mb-10">TERMO DE ENTREGA</h1>
+
+        <p class="mb-4 text-justify leading-relaxed text-sm">
+            ESTE TERMO VISA ATESTAR QUE FOI ENTREGUE À: 
+            <input type="text" name="setor_destino" class="input-invisivel font-bold uppercase inline w-3/5" value="COORDENAÇÃO DO CENTRO CIRÚRGICO" placeholder="CLIQUE AQUI PARA DIGITAR O SETOR...">
+            o(s) item(ns) descrito(s) abaixo:
+        </p>
+
+        <!-- TABELA DE EQUIPAMENTOS -->
+        <table class="termo-table font-bold text-sm">
+            <tr class="bg-gray-100">
+                <td width="10%">ORD.</td>
+                <td width="55%">DESCRIÇÃO (EQUIPAMENTO)</td>
+                <td width="35%">N° PATRIMÔNIO / SÉRIE</td>
+            </tr>
+            <tbody id="tbody-equipamentos">
+                <tr>
+                    <!-- COLUNA 1: ORDEM E LIXEIRA -->
+                    <td style="position: relative;">
+                        <span class="ord-text">01</span>
+                        <button type="button" class="btn-remove no-print" onclick="removerLinha(this)" style="display: none; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); color: #ef4444; border: none; background: transparent; cursor: pointer; transition: 0.2s;" title="Remover Equipamento">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                    
+                    <!-- COLUNA 2: DESCRIÇÃO -->
+                    <td>
+                        <select class="input-invisivel no-print text-center text-blue-600 text-[10px] mb-1" onchange="atualizarDadosEquipamento(this)">
+                            <option value="">-- SELECIONE UM EQUIPAMENTO --</option>
+                            {% for eq in todos_equipamentos %}
+                                <option value="{{ eq.id }}" 
+                                    data-descricao="{{ eq.descricao }} {{ eq.marca|default:'' }} {{ eq.modelo|default:'' }}"
+                                    data-patrimonio="{{ eq.patrimonio }}" 
+                                    data-serie="{{ eq.numero_serie|default:'S/N' }}"
+                                    {% if equipamento and equipamento.id == eq.id %}selected{% endif %}>
+                                    {{ eq.descricao }} {{ eq.marca|default:'' }} {{ eq.modelo|default:'' }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="equipamento_id" value="{% if equipamento %}{{ equipamento.id }}{% endif %}">
+                        <textarea name="descricao_editada" class="input-invisivel text-center font-bold uppercase" rows="2" style="resize: none; overflow: hidden; vertical-align: middle; width: 100%;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">{% if equipamento %}{{ equipamento.descricao }} {{ equipamento.marca|default:'' }} {{ equipamento.modelo|default:'' }}{% endif %}</textarea>
+                    </td>
+                    
+                    <!-- COLUNA 3: PATRIMÔNIO -->
+                    <td>
+                        <textarea name="patrimonio_editado" class="input-invisivel text-center uppercase" rows="2" style="resize: none; overflow: hidden; vertical-align: middle;">{% if equipamento %}{{ equipamento.patrimonio }}
+CN: {{ equipamento.numero_serie|default:'S/N' }}{% endif %}</textarea>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <!-- O BOTÃO DE ADICIONAR + -->
+        <button type="button" onclick="adicionarLinha()" class="btn-add no-print">
+            <i class="fas fa-plus-circle text-lg"></i> Adicionar mais um Equipamento
+        </button>
+
+        <div class="mt-8 text-sm leading-relaxed">
+            <p><strong>OBS. EQUIPAMENTO(S) ACOMPANHADO(S) DOS SEGUINTES ACESSÓRIOS:</strong></p>
+            
+            <div class="acessorios-grid" id="caixa-checkboxes">
+                <label class="checkbox-item"><input type="checkbox" name="acessorios" value="Cabo de Força" onchange="gerarTextoImpressao()"> Cabo de Força</label>
+                <label class="checkbox-item"><input type="checkbox" name="acessorios" value="Cabo de ECG" onchange="gerarTextoImpressao()"> Cabo de ECG</label>
+                <label class="checkbox-item"><input type="checkbox" name="acessorios" value="Sensor de Oximetria" onchange="gerarTextoImpressao()"> Sensor de Oximetria</label>
+                <label class="checkbox-item"><input type="checkbox" name="acessorios" value="Sensor de Temperatura" onchange="gerarTextoImpressao()"> Sensor de Temp.</label>
+                <label class="checkbox-item"><input type="checkbox" name="acessorios" value="Cabo Manguito PNI" onchange="gerarTextoImpressao()"> Cabo Manguito</label>
+                <label class="checkbox-item"><input type="checkbox" name="acessorios" value="Braçadeira PNI" onchange="gerarTextoImpressao()"> Braçadeira PNI</label>
+                <label class="checkbox-item"><input type="checkbox" name="acessorios" value="Cabo de Pressão Invasiva" onchange="gerarTextoImpressao()"> Cabo Pressão Invasiva</label>
+                <label class="checkbox-item"><input type="checkbox" name="acessorios" value="Módulo de Capnografia" onchange="gerarTextoImpressao()"> Capnografia</label>
+            </div>
+            
+            <p id="texto-impressao" class="print-only-text uppercase">Nenhum acessório selecionado.</p>
+
+            <p class="mt-6 text-red-600 font-bold uppercase">Atenção (Pendências):</p>
+            <textarea name="acessorios_pendentes" class="input-invisivel text-red-600 font-bold uppercase" rows="2" style="resize: none; overflow: hidden; word-wrap: break-word;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" placeholder="Clique para digitar o que será entregue depois (Opcional)..."></textarea>
+        </div>
+
+        <div class="mt-20 grid grid-cols-2 gap-10 text-center text-sm font-bold">
+            <div>
+                <p>RESPONSÁVEL PELA ENTREGA:</p>
+                <div class="border-b border-black mt-10 mb-2 mx-4"></div>
+                <p class="font-normal uppercase">{{ user.first_name|default:user.username }}</p>
+            </div>
+            <div>
+                <p>RESPONSÁVEL PELO RECEBIMENTO:</p>
+                <div class="border-b border-black mt-10 mb-2 mx-4"></div>
+            </div>
+        </div>
+
+        <div class="mt-16 text-right text-sm">
+            Palmas, {% now "d \d\e F \d\e Y" %}
+        </div>
+
+        <button type="button" onclick="imprimirESalvar()" class="btn-float">
+            <i class="fas fa-print"></i> Imprimir e Guardar
+        </button>
+    </form>
+</div>
+
+<script>
+    let contadorLinhas = 1;
+
+    function adicionarLinha() {
+        contadorLinhas++;
+        const tbody = document.getElementById('tbody-equipamentos');
+        const primeiraLinha = tbody.firstElementChild;
+        
+        const novaLinha = primeiraLinha.cloneNode(true);
+        novaLinha.querySelector('.ord-text').innerText = contadorLinhas.toString().padStart(2, '0');
+        novaLinha.querySelector('.btn-remove').style.display = 'block';
+        
+        novaLinha.querySelector('select').selectedIndex = 0;
+        novaLinha.querySelector('input[name="equipamento_id"]').value = '';
+        novaLinha.querySelector('textarea[name="descricao_editada"]').value = '';
+        novaLinha.querySelector('textarea[name="descricao_editada"]').style.height = 'auto';
+        novaLinha.querySelector('textarea[name="patrimonio_editado"]').value = '';
+        novaLinha.querySelector('textarea[name="patrimonio_editado"]').style.height = 'auto';
+        
+        tbody.appendChild(novaLinha);
+    }
+
+    function removerLinha(btn) {
+        const linha = btn.closest('tr');
+        linha.remove();
+        
+        const tbody = document.getElementById('tbody-equipamentos');
+        const linhas = tbody.querySelectorAll('tr');
+        contadorLinhas = linhas.length;
+        
+        linhas.forEach((tr, index) => {
+            tr.querySelector('.ord-text').innerText = (index + 1).toString().padStart(2, '0');
+        });
+        
+        verificarAcessorios();
+    }
+
+    function atualizarDadosEquipamento(selectElement) {
+        const opcao = selectElement.options[selectElement.selectedIndex];
+        const linhaAtual = selectElement.closest('tr');
+        
+        const inputId = linhaAtual.querySelector('input[name="equipamento_id"]');
+        const inputDescricao = linhaAtual.querySelector('textarea[name="descricao_editada"]');
+        const inputPatrimonio = linhaAtual.querySelector('textarea[name="patrimonio_editado"]');
+        
+        if (!opcao.value) { 
+            inputId.value = ''; inputDescricao.value = ''; inputPatrimonio.value = '';
+            return;
+        }
+
+        const descricao = opcao.getAttribute('data-descricao');
+        const patrimonio = opcao.getAttribute('data-patrimonio');
+        const serie = opcao.getAttribute('data-serie');
+        
+        inputId.value = opcao.value;
+        
+        inputDescricao.value = descricao;
+        inputDescricao.style.height = '';
+        inputDescricao.style.height = inputDescricao.scrollHeight + 'px';
+        
+        inputPatrimonio.value = `${patrimonio}\nCN: ${serie}`;
+        inputPatrimonio.style.height = '';
+        inputPatrimonio.style.height = inputPatrimonio.scrollHeight + 'px';
+        
+        verificarAcessorios();
+    }
+
+    function verificarAcessorios() {
+        const selects = document.querySelectorAll('select.input-invisivel');
+        const caixas = document.querySelectorAll('input[name="acessorios"]');
+        
+        let temMonitor = false;
+        selects.forEach(select => {
+            if(select.selectedIndex > 0) {
+                const nomeEq = select.options[select.selectedIndex].text.toUpperCase();
+                if (nomeEq.includes("MONITOR")) temMonitor = true;
+            }
+        });
+
+        if (temMonitor) {
+            caixas.forEach(caixa => {
+                if(["Cabo de Força", "Cabo de ECG", "Sensor de Oximetria", "Cabo Manguito PNI", "Braçadeira PNI"].includes(caixa.value)) {
+                    caixa.checked = true;
+                }
+            });
+        } else {
+             caixas.forEach(caixa => { caixa.checked = false; });
+        }
+        gerarTextoImpressao();
+    }
+
+    function gerarTextoImpressao() {
+        const marcados = Array.from(document.querySelectorAll('input[name="acessorios"]:checked')).map(cb => cb.value);
+        const textoEl = document.getElementById('texto-impressao');
+        textoEl.innerText = marcados.length > 0 ? "(" + marcados.join(", ") + ")." : "Nenhum acessório selecionado.";
+    }
+
+    function imprimirESalvar() {
+        window.print();
+        setTimeout(() => { document.getElementById('formTermo').submit(); }, 500);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const primeiroSelect = document.querySelector('select.input-invisivel');
+        if(primeiroSelect && primeiroSelect.selectedIndex > 0) {
+            atualizarDadosEquipamento(primeiroSelect);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .editor-bg { background-color: #0f172a; min-height: 100vh; padding: 2rem; display: flex; justify-content: center; }
+    
+    .a4-paper {
+        background: white; width: 210mm; min-height: 297mm; padding: 15mm;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.5); color: black;
+        font-family: 'Times New Roman', Times, serif; position: relative;
+    }
+
+    .input-invisivel {
+        border: none; background: transparent; border-bottom: 1px dashed transparent;
+        font-family: inherit; font-size: inherit; color: inherit; width: 100%; outline: none; transition: 0.2s;
+    }
+    .input-invisivel:hover, .input-invisivel:focus {
+        border-bottom: 1px dashed #2563eb; background: rgba(37, 99, 235, 0.05);
+    }
+    
+    select.input-invisivel { cursor: pointer; }
+
+    .gov-border { border: 1px solid black; }
+    .gov-table th, .gov-table td { border: 1px solid black; padding: 8px; text-align: center; vertical-align: middle; word-wrap: break-word;}
+    
+    .sec-title { background: #e2e8f0; font-weight: bold; font-size: 12px; padding: 2px 5px; border-bottom: 1px solid black; border-top: 1px solid black; }
+
+    .btn-float {
+        position: fixed; bottom: 2rem; right: 2rem; background: linear-gradient(135deg, #2563eb, #0d9488);
+        color: white; padding: 15px 25px; border-radius: 50px; box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4);
+        font-weight: bold; cursor: pointer; border: none; transition: 0.3s; display: flex; gap: 10px; align-items: center; z-index: 100;
+    }
+    .btn-float:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(13, 148, 136, 0.6); }
+
+    /* MODO DE IMPRESSÃO */
+    @media print {
+        @page { margin: 0; size: A4; }
+        body { background: white !important; margin: 0; padding: 0; }
+        .editor-bg { padding: 0; background: white; display: block; }
+        .a4-paper { box-shadow: none; width: 100%; min-height: 100%; padding: 10mm; }
+        
+        #sidebar, .mobile-header, .btn-float, .no-print { display: none !important; }
+        .main-content { margin: 0 !important; width: 100% !important; }
+        .input-invisivel { border-bottom: none !important; appearance: none; -webkit-appearance: none; resize: none; overflow: hidden; }
+    }
+</style>
+
+<div class="editor-bg">
+    <form id="formGMBP" method="POST" class="a4-paper">
+        {% csrf_token %}
+
+        <div class="flex justify-between items-center mb-4">
+            <div class="w-1/4 flex justify-center">
+                <img src="{% static 'img/brasao.png' %}" alt="Brasão do Tocantins" style="max-height: 80px; object-fit: contain;">
+            </div>
+            <div class="w-1/2 text-center">
+                <h1 class="font-bold text-sm uppercase">Governo do Tocantins</h1>
+                <h2 class="font-bold text-sm uppercase mt-1">Guia de Movimentação de Bem Patrimonial</h2>
+            </div>
+            <div class="w-1/4 gov-border text-center">
+                <div class="font-bold text-xl border-b border-black">G M B P</div>
+                <div class="text-xs p-1">Nº: <input type="text" name="numero_guia" class="input-invisivel font-bold text-red-600 inline w-16" value="{% now 'd-Y' %}"></div>
+            </div>
+        </div>
+
+        <div class="flex justify-end mb-2 text-xs font-bold">
+            EMISSÃO: {% now "d/m/Y H:i" %}
+        </div>
+
+        <!-- 1. CEDENTE & 2. RECEPTOR -->
+        <div class="grid grid-cols-2 gov-border text-xs">
+            
+            <div class="border-r border-black">
+                <div class="sec-title">1 - DO CEDENTE</div>
+                <div class="p-2 space-y-2">
+                    <div class="flex items-start gap-1">
+                        <strong class="mt-1">Órgão:</strong> 
+                        <textarea name="orgao_cedente" class="input-invisivel uppercase flex-1" rows="1" style="resize: none; overflow: hidden;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">SECRETARIA ESTADUAL DE SAÚDE DO TOCANTINS</textarea>
+                    </div>
+                    <div class="flex items-start gap-1">
+                        <strong class="mt-1">Unidade:</strong> 
+                        <textarea name="unidade_cedente" class="input-invisivel uppercase flex-1 font-bold" rows="1" style="resize: none; overflow: hidden;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">GERÊNCIA DE ENGENHARIA CLÍNICA – SES</textarea>
+                    </div>
+                    <div class="flex items-start gap-1">
+                        <strong class="mt-1">Município:</strong> 
+                        <textarea name="municipio_cedente" class="input-invisivel uppercase flex-1" rows="1" style="resize: none; overflow: hidden;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">PALMAS</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="sec-title">2 - DO RECEPTOR</div>
+                <div class="p-2 space-y-2">
+                    <div class="flex items-start gap-1">
+                        <strong class="mt-1">Órgão:</strong> 
+                        <textarea name="orgao_receptor" class="input-invisivel uppercase flex-1" rows="1" style="resize: none; overflow: hidden;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">SECRETARIA ESTADUAL DE SAÚDE DO TOCANTINS</textarea>
+                    </div>
+                    <div class="flex items-start gap-1">
+                        <strong class="mt-1">Unidade:</strong> 
+                        <textarea name="unidade_receptor" class="input-invisivel uppercase flex-1 font-bold" rows="1" style="resize: none; overflow: hidden;" placeholder="DIGITE O SETOR DE DESTINO..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">ENGENHARIA CLÍNICA - HGP</textarea>
+                    </div>
+                    <div class="flex items-start gap-1">
+                        <strong class="mt-1">Município:</strong> 
+                        <textarea name="municipio_receptor" class="input-invisivel uppercase flex-1" rows="1" style="resize: none; overflow: hidden;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">PALMAS</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MOVIMENTAÇÃO -->
+        <div class="gov-border border-t-0 text-xs">
+            <div class="sec-title">3 - DA MOVIMENTAÇÃO</div>
+            <div class="p-2">
+                <select name="tipo_movimentacao" class="input-invisivel font-bold uppercase text-left w-64">
+                    <option value="TRANSFERENCIA_INTERNA" selected>Transferência Interna</option>
+                    <option value="TRANSFERENCIA_EXTERNA">Transferência Externa</option>
+                    <option value="EMPRESTIMO_INTERNO">Empréstimo Interno</option>
+                    <option value="EMPRESTIMO_EXTERNO">Empréstimo Externo</option>
+                    <option value="DEVOLUCAO">Devolução</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 4. DO(S) BEM(S) -->
+        <div class="gov-border border-t-0 mt-4 text-xs">
+            <div class="sec-title text-center">4 - DO(S) BEM(S)</div>
+            <table class="w-full gov-table text-[11px]">
+                <tr class="bg-gray-100 font-bold uppercase">
+                    <td width="5%">Qtde</td>
+                    <td width="15%">Plaqueta</td>
+                    <td width="15%">Nº de Série</td>
+                    <td width="15%">Est. Cons.</td>
+                    <td width="40%">Descrição</td>
+                    <td width="10%">Valor</td>
+                </tr>
+                <tr>
+                    <td><input type="number" name="quantidade" class="input-invisivel text-center" value="1"></td>
+                    
+                    <td><textarea name="patrimonio_editado" id="gmbp_patrimonio" class="input-invisivel text-center font-bold" rows="2" style="resize: none; overflow: hidden; vertical-align: middle;">{% if equipamento %}{{ equipamento.patrimonio }}{% endif %}</textarea></td>
+                    
+                    <td><textarea name="numero_serie_editado" id="gmbp_serie" class="input-invisivel text-center" rows="2" style="resize: none; overflow: hidden; vertical-align: middle;">{% if equipamento %}{{ equipamento.numero_serie|default:'' }}{% endif %}</textarea></td>
+                    
+                    <td>
+                        <select name="estado_conservacao" class="input-invisivel text-center font-bold">
+                            <option value="PERFEITO" selected>PERFEITO</option>
+                            <option value="INTERMEDIARIO">INTERMEDIÁRIO</option>
+                            <option value="RUIM">RUIM</option>
+                        </select>
+                    </td>
+                    
+                    <td>
+                        <select class="input-invisivel no-print text-center text-blue-600 text-[10px] mb-1" onchange="atualizarDadosGMBP(this)">
+                            <option value="">-- SELECIONE UM EQUIPAMENTO --</option>
+                            {% for eq in todos_equipamentos %}
+                                <option value="{{ eq.id }}" 
+                                    data-descricao="{{ eq.descricao }} - {{ eq.marca|default:'' }} {{ eq.modelo|default:'' }}"
+                                    data-patrimonio="{{ eq.patrimonio }}" 
+                                    data-serie="{{ eq.numero_serie|default:'' }}"
+                                    {% if equipamento and equipamento.id == eq.id %}selected{% endif %}>
+                                    {{ eq.descricao }} {{ eq.patrimonio }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="equipamento_id" id="gmbp_equip_id" value="{% if equipamento %}{{ equipamento.id }}{% endif %}">
+                        <textarea name="descricao_editada" id="gmbp_descricao" class="input-invisivel text-center uppercase font-bold" rows="2" style="resize: none; overflow: hidden; vertical-align: middle; width: 100%;" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">{% if equipamento %}{{ equipamento.descricao }} - {{ equipamento.marca|default:'' }} {{ equipamento.modelo|default:'' }}{% endif %}</textarea>
+                    </td>
+                    
+                    <td><input type="text" name="valor" class="input-invisivel text-center" value="--"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 5. DOS RESPONSÁVEIS -->
+        <div class="mt-12 grid grid-cols-3 gap-4 text-[10px] text-center uppercase">
+            <div>
+                <div class="border-b border-black w-4/5 mx-auto mb-1"></div>
+                <p>Gestor Responsável</p>
+                <p class="mt-1">{% now "d/m/Y" %}</p>
+            </div>
+            <div>
+                <div class="border-b border-black w-4/5 mx-auto mb-1"></div>
+                <p>Cedente ({{ user.first_name|default:user.username }})</p>
+                <p class="mt-1">{% now "d/m/Y" %}</p>
+            </div>
+            <div>
+                <div class="border-b border-black w-4/5 mx-auto mb-1"></div>
+                <p>Receptor</p>
+                <p class="mt-1">{% now "d/m/Y" %}</p>
+                <p class="normal-case text-[9px] mt-2 italic text-left px-2">Recebi o(s) bem(s) acima especificado(s), que a partir desta data está(ão) sob minha responsabilidade.</p>
+            </div>
+        </div>
+
+        <button type="button" onclick="imprimirESalvar()" class="btn-float">
+            <i class="fas fa-print"></i> Imprimir e Guardar
+        </button>
+    </form>
+</div>
+
+<script>
+    function atualizarDadosGMBP(selectElement) {
+        const opcao = selectElement.options[selectElement.selectedIndex];
+        
+        const inputId = document.getElementById('gmbp_equip_id');
+        const inputDesc = document.getElementById('gmbp_descricao');
+        const inputPat = document.getElementById('gmbp_patrimonio');
+        const inputSer = document.getElementById('gmbp_serie');
+        
+        if (!opcao.value) { 
+            inputId.value = ''; inputDesc.value = ''; inputPat.value = ''; inputSer.value = '';
+            return;
+        }
+
+        inputId.value = opcao.value;
+        inputDesc.value = opcao.getAttribute('data-descricao');
+        inputPat.value = opcao.getAttribute('data-patrimonio');
+        inputSer.value = opcao.getAttribute('data-serie');
+        
+        [inputDesc, inputPat, inputSer].forEach(el => {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        });
+    }
+
+    function imprimirESalvar() {
+        window.print();
+        setTimeout(() => { document.getElementById('formGMBP').submit(); }, 500);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const select = document.querySelector('select.no-print');
+        if(select && select.selectedIndex > 0) {
+            atualizarDadosGMBP(select);
+        }
+    });
+</script>
+{% endblock %}

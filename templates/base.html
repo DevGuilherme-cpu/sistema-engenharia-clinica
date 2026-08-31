@@ -145,6 +145,14 @@
             </ul>
           </li>
 
+          <li class="menu-item" onclick="toggleSubmenu('sub-documentos')">
+            <a href="javascript:void(0)"><i class="fas fa-folder-open"></i> <span class="nav-text flex-1">Documentos</span> <i class="fas fa-chevron-down text-[10px] ml-auto"></i></a>
+            <ul id="sub-documentos" class="submenu">
+              <li><a href="{% url 'gerar_termo_geral' %}"><span class="nav-text">Termo de Entrega</span></a></li>
+              <li><a href="{% url 'gerar_gmbp_geral' %}"><span class="nav-text">Guia de Movimentação</span></a></li>
+            </ul>
+          </li>
+
           <li class="menu-item" onclick="toggleSubmenu('sub-acessorios')">
             <a href="javascript:void(0)"><i class="fas fa-plug"></i> <span class="nav-text flex-1">Acessórios</span> <i class="fas fa-chevron-down text-[10px] ml-auto"></i></a>
             <ul id="sub-acessorios" class="submenu">

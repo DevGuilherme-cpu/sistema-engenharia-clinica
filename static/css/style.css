@@ -1828,3 +1828,23 @@ video {
     line-height: 1;
   }
 }
+
+@media print {
+  #sidebar, .mobile-header, .btn-imprimir, .no-print {
+      display: none !important;
+  }
+  
+  .main-content {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+  }
+
+  input, textarea, select {
+      border: none !important;
+      background: transparent !important;
+      appearance: none;
+      -webkit-appearance: none;
+      color: black !important;
+  }
+}

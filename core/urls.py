@@ -14,6 +14,11 @@ urlpatterns = [
     path('equipamento/cadastrar/', views.cadastrar_equipamento, name='cadastrar_equipamento'),
     path('equipamentos/visualizar/<int:id>/', views.visualizar_equipamento, name='visualizar_equipamento'),
     path('equipamentos/editar/<int:id>/', views.editar_equipamento, name='editar_equipamento'),
+    path('equipamento/<int:id>/guia-movimentacao/', views.gerar_gmbp, name='gerar_gmbp'),
+    path('equipamento/<int:id>/termo-entrega/', views.gerar_termo, name='gerar_termo'),
+    
+    path('termo-entrega/', views.gerar_termo, name='gerar_termo_geral'),
+    path('guia-movimentacao/', views.gerar_gmbp, name='gerar_gmbp_geral'),
     
     path('manutencoes/', views.listar_manutencoes, name='listar_manutencoes'),
     path('manutencoes/nova/', views.cadastrar_manutencao, name='cadastrar_manutencao'),

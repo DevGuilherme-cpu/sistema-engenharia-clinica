@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 import qrcode
 from io import BytesIO
 from django.core.files import File
+from django.utils import timezone
 
 # Tabela dos Setores
 class Setor(models.Model):
@@ -136,3 +137,68 @@ class Perfil(models.Model):
 
     def __str__(self):
         return f"Perfil de {self.user.username}"
+    
+# --- GUIA DE MOVIMENTAÇÃO (GMBP) ---
+class GuiaMovimentacao(models.Model):
+    ESTADO_CONSERVACAO_CHOICES = [
+        ('RUIM', 'Ruim'),
+        ('INTERMEDIARIO', 'Intermediário'),
+        ('PERFEITO', 'Perfeito'),
+    ]
+
+    TIPO_MOVIMENTACAO_CHOICES = [
+        ('TRANSFERENCIA_INTERNA', 'Transferência Interna'),
+        ('TRANSFERENCIA_EXTERNA', 'Transferência Externa'),
+        ('EMPRESTIMO_INTERNO', 'Empréstimo Interno'),
+        ('EMPRESTIMO_EXTERNO', 'Empréstimo Externo'),
+        ('DEVOLUCAO', 'Devolução'),
+    ]
+
+    # Relação com o Equipamento
+    equipamento = models.ForeignKey('Equipamento', on_delete=models.CASCADE, related_name='guias_movimentacao')
+    numero_guia = models.CharField(max_length=50, blank=True, null=True, help_text="Ex: GMBP-01-2026")
+    
+    orgao_cedente = models.CharField(max_length=255, default="SECRETARIA ESTADUAL DE SAUDE DO TOCANTINS")
+    unidade_cedente = models.CharField(max_length=255, default="GERENCIA DE ENGENHARIA CLINICA - SES")
+    municipio_cedente = models.CharField(max_length=100, default="Palmas")
+    
+    orgao_receptor = models.CharField(max_length=255, default="SECRETARIA ESTADUAL DE SAUDE DO TOCANTINS")
+    unidade_receptor = models.CharField(max_length=255, help_text="Ex: ENGENHARIA CLINICA - HGP")
+    municipio_receptor = models.CharField(max_length=100, default="Palmas")
+    
+    tipo_movimentacao = models.CharField(max_length=50, choices=TIPO_MOVIMENTACAO_CHOICES)
+    data_emissao = models.DateTimeField(default=timezone.now)
+    
+    estado_conservacao = models.CharField(max_length=20, choices=ESTADO_CONSERVACAO_CHOICES, default='PERFEITO')
+    quantidade = models.IntegerField(default=1)
+    valor = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    descricao_editada = models.TextField(help_text="Descrição que vai aparecer na impressão")
+    patrimonio_editado = models.CharField(max_length=100)
+    numero_serie_editado = models.CharField(max_length=100, blank=True)
+    
+    responsavel_cedente = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='guias_emitidas')
+    responsavel_receptor_nome = models.CharField(max_length=255, blank=True, help_text="Nome de quem recebeu")
+
+    def __str__(self):
+        return f"GMBP - {self.equipamento} ({self.data_emissao.strftime('%d/%m/%Y')})"
+
+
+# --- TERMO DE ENTREGA ---
+class TermoEntrega(models.Model):
+    equipamento = models.ForeignKey('Equipamento', on_delete=models.CASCADE, related_name='termos_entrega')
+    ordem_impressao = models.IntegerField(default=1, help_text="Nº da Ordem na folha (ex: 01)")
+    
+    setor_destino = models.CharField(max_length=255, help_text="Ex: COORDENAÇÃO DO CENTRO CIRURGICO")
+    data_entrega = models.DateField(default=timezone.now)
+    
+    acessorios_inclusos = models.TextField(help_text="O que vai junto com o equipamento")
+    acessorios_pendentes = models.TextField(blank=True, help_text="Atenção: O que será entregue depois")
+    
+    descricao_editada = models.CharField(max_length=255, help_text="Ex: MONITOR LIFEMED – M12")
+    patrimonio_editado = models.CharField(max_length=100)
+
+    responsavel_entrega = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='termos_entregues')
+    responsavel_recebimento_nome = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"Termo de Entrega - {self.equipamento} ({self.setor_destino})"

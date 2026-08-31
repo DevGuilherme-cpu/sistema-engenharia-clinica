@@ -513,9 +513,20 @@
           </div>
         </div>
 
-        <div
-          style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap"
-        >
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          
+          <!-- Botões Novos (Documentos) -->
+          <a href="{% url 'gerar_gmbp' equipamento.id %}" class="btn-secondary" style="border-color: rgba(96, 165, 250, 0.3); color: #60a5fa;" title="Guia de Movimentação">
+            <i class="fas fa-file-invoice"></i> Gerar GMBP
+          </a>
+          <a href="{% url 'gerar_termo' equipamento.id %}" class="btn-secondary" style="border-color: rgba(45, 212, 191, 0.3); color: #2dd4bf;" title="Termo de Entrega">
+            <i class="fas fa-file-signature"></i> Gerar Termo
+          </a>
+          
+          <!-- Um pequeno divisor visual -->
+          <div style="width: 1px; height: 24px; background: rgba(255, 255, 255, 0.1); margin: 0 4px;"></div>
+
+          <!-- Botões Originais -->
           <a href="#" class="btn-secondary">
             <i class="fas fa-pen"></i> Editar
           </a>
@@ -1117,6 +1128,93 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="card animate-fade-in-up delay-200" style="padding: 24px;">
+  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+    <i class="fas fa-file-contract" style="color: #2dd4bf"></i>
+    <div>
+      <h2 style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin: 0;">
+        Histórico de Rastreabilidade (Termos e Guias)
+      </h2>
+      <p style="font-size: 12px; color: rgba(255, 255, 255, 0.35); margin: 3px 0 0;">
+        Exibindo todos os documentos de movimentação gerados para este equipamento
+      </p>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+    
+    <!-- COLUNA 1: GUIAS DE MOVIMENTAÇÃO (GMBP) -->
+    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px;">
+        <h4 style="font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-file-invoice" style="color: #60a5fa"></i> Guias de Movimentação (GMBP)
+        </h4>
+        
+        {% if equipamento.guias_movimentacao.all %}
+            <div style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
+            {% for guia in equipamento.guias_movimentacao.all|dictsortreversed:"data_emissao" %}
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-left: 3px solid #60a5fa; padding: 12px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 11px; color: rgba(255, 255, 255, 0.4);"><i class="far fa-calendar-alt"></i> {{ guia.data_emissao|date:"d/m/Y H:i" }}</span>
+                        <span style="font-size: 10px; font-weight: 700; color: #60a5fa; text-transform: uppercase;">{{ guia.tipo_movimentacao|replace:"_"," "|default:"Transferência" }}</span>
+                    </div>
+                    <p style="font-size: 13px; color: #e2e8f0; margin: 0 0 6px;">
+                        <span style="color: rgba(255, 255, 255, 0.4);">Destino:</span> {{ guia.unidade_receptor }}
+                    </p>
+                    <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 6px; margin-top: 4px;">
+                        <span style="font-size: 11px; color: rgba(255, 255, 255, 0.4);"><i class="fas fa-user-edit"></i> {{ guia.responsavel_cedente.first_name|default:guia.responsavel_cedente.username }}</span>
+                        <span style="font-size: 10px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; color: rgba(255, 255, 255, 0.5);">{{ guia.numero_guia|default:"GMBP" }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 20px 0; border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                <i class="fas fa-folder-open" style="font-size: 20px; color: rgba(255, 255, 255, 0.15); margin-bottom: 8px;"></i>
+                <p style="font-size: 12px; color: rgba(255, 255, 255, 0.3); margin: 0;">Nenhuma Guia emitida.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- COLUNA 2: TERMOS DE ENTREGA -->
+    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 16px;">
+        <h4 style="font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-file-signature" style="color: #2dd4bf"></i> Termos de Entrega
+        </h4>
+        
+        {% if equipamento.termos_entrega.all %}
+            <div style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
+            {% for termo in equipamento.termos_entrega.all|dictsortreversed:"data_entrega" %}
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-left: 3px solid #2dd4bf; padding: 12px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                        <span style="font-size: 11px; color: rgba(255, 255, 255, 0.4);"><i class="far fa-calendar-alt"></i> {{ termo.data_entrega|date:"d/m/Y" }}</span>
+                        <span style="font-size: 10px; font-weight: 700; color: #2dd4bf; text-transform: uppercase;">ENTREGA</span>
+                    </div>
+                    <p style="font-size: 13px; color: #e2e8f0; margin: 0 0 4px;">
+                        <span style="color: rgba(255, 255, 255, 0.4);">Setor:</span> {{ termo.setor_destino }}
+                    </p>
+                    
+                    {% if termo.acessorios_inclusos %}
+                    <p style="font-size: 10px; color: rgba(255, 255, 255, 0.35); margin: 0 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ termo.acessorios_inclusos }}">
+                        <i class="fas fa-plug"></i> {{ termo.acessorios_inclusos }}
+                    </p>
+                    {% endif %}
+
+                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 6px; margin-top: 4px;">
+                        <span style="font-size: 11px; color: rgba(255, 255, 255, 0.4);"><i class="fas fa-user-check"></i> Por: {{ termo.responsavel_entrega.first_name|default:termo.responsavel_entrega.username }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 20px 0; border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                <i class="fas fa-clipboard-list" style="font-size: 20px; color: rgba(255, 255, 255, 0.15); margin-bottom: 8px;"></i>
+                <p style="font-size: 12px; color: rgba(255, 255, 255, 0.3); margin: 0;">Nenhum Termo gerado.</p>
+            </div>
+        {% endif %}
     </div>
   </div>
 </div>
